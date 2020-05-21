@@ -1,0 +1,27 @@
+
+export const Locale_EN = {
+    LOGO_LABEL:             "CLAIM! APP",
+    CREATE_LOBBY:           "Create Lobby",
+    LOGOUT:                 "Logout",
+    WELCOME:                "Welcome,",
+    DEFAULT_USERNAME:       "unknown",
+    WINS:                   "wins",
+    LOSS:                   "loss",
+    JOIN:                   "Join",
+    SERVER_STATUS:          "Server Status",
+    CONNECTED:              "Connected",
+    DISCONNECTED:           "Disconnected",
+    START_MATCH:            "Start Match",
+    LEAVE_LOBBY:            "Leave Lobby",
+    PRIVATE_CODE:           "Private Code",
+    LEAVE_GAME:             "Leave Game",
+    MAKE_PRIVATE:           "Make Private",
+    MAKE_PUBLIC:            "Make Public",
+    READY:                  "Ready",
+    NOT_READY:              "Not Ready",
+    WIN_RATE:               "WR",
+    DEFAULT_PRIVATE_CODE:   "----",
+    USER_DISCONNECTED:      "Disconnected",
+    DROP:                   "Drop",
+    CLAIM:                  "Claim!"
+};

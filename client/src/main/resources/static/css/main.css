@@ -1,0 +1,52 @@
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/assets/font/jetbrains/JetBrainsMono-Regular.eot'); /* IE9 Compat Modes */
+    src: url('/assets/font/jetbrains/JetBrainsMono-Regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/assets/font/jetbrains/JetBrainsMono-Regular.woff') format('woff'), /* Modern Browsers */
+    url('/assets/font/jetbrains/JetBrainsMono-Regular.ttf')  format('truetype');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono Italic';
+    src: url('/assets/font/jetbrains/JetBrainsMono-Italic.eot'); /* IE9 Compat Modes */
+    src: url('/assets/font/jetbrains/JetBrainsMono-Italic.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/assets/font/jetbrains/JetBrainsMono-Italic.woff') format('woff'), /* Modern Browsers */
+    url('/assets/font/jetbrains/JetBrainsMono-Italic.ttf')  format('truetype');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono Bold';
+    src: url('/assets/font/jetbrains/JetBrainsMono-Bold.eot'); /* IE9 Compat Modes */
+    src: url('/assets/font/jetbrains/JetBrainsMono-Bold.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/assets/font/jetbrains/JetBrainsMono-Bold.woff') format('woff'), /* Modern Browsers */
+    url('/assets/font/jetbrains/JetBrainsMono-Bold.ttf')  format('truetype');
+}
+
+/* roboto-regular - latin */
+@font-face {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/assets/font/roboto/roboto-v20-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local('Roboto'), local('Roboto-Regular'),
+    url('/assets/font/roboto/roboto-v20-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/assets/font/roboto/roboto-v20-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('/assets/font/roboto/roboto-v20-latin-regular.woff') format('woff'), /* Modern Browsers */
+    url('/assets/font/roboto/roboto-v20-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('/assets/font/roboto/roboto-v20-latin-regular.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+
+p {
+    font-family: "JetBrains Mono", monospace, sans-serif;
+    font-size: 16px;
+}
+
+b {
+    font-family: "JetBrains Mono Bold", monospace, sans-serif;
+    font-size: 16px;
+}
+
+i {
+    font-family: "JetBrains Mono Italic", monospace, sans-serif;
+    font-size: 16px;
+}
