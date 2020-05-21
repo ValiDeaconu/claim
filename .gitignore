@@ -1,13 +1,5 @@
 /.idea/
-/out/
-
 /client/.idea/
 /client/target/
-
 /server/.idea/
-/server/.mvn/
 /server/target/
-/server/.gitignore
-/server/HELP.md/
-/server/mvnw/
-/server/mvnw.cmd/
