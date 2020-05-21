@@ -22,4 +22,6 @@ public interface LobbyService {
     Lobby userJoinLobby(UUID lobbyId, User user);
 
     Lobby startMatch(UUID lobbyId);
+
+    Lobby endMatch(UUID lobbyId);
 }

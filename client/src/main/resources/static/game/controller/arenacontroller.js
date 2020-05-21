@@ -90,6 +90,9 @@ export default class ArenaController {
         // set player turn
         this.ui.setTurn(playerToCardMap[this.gameState.turn]);
 
+        // set round number
+        this.ui.setRound(this.gameState.currentRound, 10);
+
         let isCurrentPlayerTurn = (this.gameState.turn === currentPlayerIndexInLobby);
 
         if (!this.handler || !this.handler.connected) {
@@ -106,36 +109,60 @@ export default class ArenaController {
                         this.update();
                     }
                     else if (command === "claim") {
-                        let winners = jsonObject.arg;
+                        this.lobby.running = false;
+
+                        let rankings = jsonObject.arg;
+                        let winners = rankings.winners;
+                        let losers = rankings.losers;
+
                         let winner = winners[0];
 
-                        if (winner.userDTO.id === this.viewManager.currentUser.id) {
-                            if (winner.calledClaim) {
-                                alert("Congrats, you called claim and you won!");
-                            } else {
-                                alert("Congrats, you did not called claim but you had less points so you won");
-                            }
-                        } else if (winner.userDTO.id !== this.viewManager.currentUser.id) {
-                            let currentUserOneOfTheWinners = false;
+                        this.ui.putGameOverPanel();
 
-                            for (let i = 1; i < winners.length; ++i) {
-                                if (winners.userDTO.id === this.viewManager.currentUser.id) {
-                                    currentUserOneOfTheWinners = true;
+                        this.ui.setClaimScore(winner.score);
+
+                        if (winner.calledClaim) {
+                            this.ui.setClaimCaller(winner.userDTO.username);
+                            this.ui.setCallerWins(true);
+                        } else {
+                            let userWhoCalledClaimAndLost;
+                            for (let i = 0; i < losers.length; ++i) {
+                                if (losers[i].calledClaim) {
+                                    userWhoCalledClaimAndLost = losers[i].userDTO;
                                     break;
                                 }
                             }
+                            this.ui.setClaimCaller(userWhoCalledClaimAndLost.username);
+                            this.ui.setCallerWins(false, winner.userDTO.username);
+                        }
 
-                            if (currentUserOneOfTheWinners) {
-                                alert("You did not called claim, but somehow you won");
-                            } else {
-                                let usernamesOfWinners = "";
-                                winners.forEach((winner) => {
-                                    usernamesOfWinners += winner.userDTO.username + ", ";
-                                });
-                                usernamesOfWinners.substr(0, usernamesOfWinners.length - 2);
-
-                                alert("Sadly, you lost. Winners are: " + usernamesOfWinners);
+                        let winningHand;
+                        for (let i = 0; i < this.gameState.userHands.length; ++i) {
+                            let currentIterationHand = this.gameState.userHands[i];
+                            if (currentIterationHand.user.id === winner.userDTO.id) {
+                                winningHand = currentIterationHand.cards;
+                                break;
                             }
+                        }
+
+                        let cardIndex = 0;
+                        for (; cardIndex < winningHand.length; ++cardIndex) {
+                            let cardAssetId = winningHand[cardIndex].rank + winningHand[cardIndex].suit;
+                            this.ui.setWinningCardVisible(cardIndex, false);
+                            this.ui.setWinningCard(cardIndex, cardAssetId);
+                        }
+
+                        for (; cardIndex < 5; ++cardIndex) {
+                            this.ui.setWinningCardVisible(cardIndex, false);
+                        }
+
+                        if (winners.length > 1) {
+                            let otherWinners = [];
+                            for (let i = 1; i < winners.length; ++i) {
+                                otherWinners.push(winners[i].userDTO.username);
+                            }
+
+                            this.ui.setOtherWinners(otherWinners)
                         }
                     }
                 }
@@ -160,7 +187,7 @@ export default class ArenaController {
 
             let endTurnRequestFunc = (drawMethod) => {
                 if (this.droppedCards.length === 0) {
-                    alert("You can draw a card after you dropped");
+                    this.ui.setMessage("You can draw a card after you dropped");
                     return;
                 }
 
@@ -179,7 +206,7 @@ export default class ArenaController {
 
             this.ui.setDropButtonConsumer(() => {
                 if (this.droppedCards.length !== 0) {
-                    alert("You can drop only once, maybe you should draw a card");
+                    this.ui.setMessage("You can drop only once, maybe you should draw a card");
                     return;
                 }
 
@@ -190,7 +217,7 @@ export default class ArenaController {
                         this.droppedCards.push(cards[i]);
 
                 if (this.droppedCards.length === 0) {
-                    alert("You have to drop at least 1 card");
+                    this.ui.setMessage("You have to drop at least 1 card");
                     return;
                 }
 
@@ -206,7 +233,7 @@ export default class ArenaController {
 
                 if (!allSameRank) {
                     this.droppedCards = [];
-                    alert("Only cards of the same rank can be thrown in pairs");
+                    this.ui.setMessage("Only cards of the same rank can be thrown in pairs");
                     return;
                 }
 
@@ -227,22 +254,29 @@ export default class ArenaController {
 
             this.ui.setClaimButtonConsumer(() => {
                 if (this.droppedCards.length !== 0) {
-                    alert("You can call claim only before you drop cards");
+                    this.ui.setMessage("You can call claim only before you drop cards");
+                    return;
+                }
+
+                if (this.gameState.currentRound <= 1) {
+                    this.ui.setMessage("You must wait at least 1 round to call claim");
                     return;
                 }
 
                 this.request.send(RequestMethod.POST, "/match/" + this.lobby.id + "/claim");
             });
-        } else {
-            // TODO: Make Drop and Claim buttons disabled when it's not current player's turn
         }
 
         this.ui.setLeaveGameButtonConsumer(() => {
-            // TODO
-        });
+            if (this.lobby.running) {
+                this.ui.setMessage("You cannot leave from an on-going match");
+                return;
+            }
 
-        this.ui.setLogoutButtonConsumer(() => {
-           // TODO
+            let controller = this.viewManager.setViewTo(Views.LOBBY);
+            controller.lobby = this.lobby;
+            controller.update();
+            this.viewManager.updateUrl();
         });
 
     }

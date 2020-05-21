@@ -7,6 +7,7 @@ import GridLayout from "/game/layout/gridlayout.js";
 import ArenaPlayerCard from "/game/component/arenaplayercard.js";
 import ResourceManager from "/game/misc/resourcemanager.js";
 import InteractiveImage from "/game/component/interactiveimage.js";
+import Image from "/game/component/image.js";
 
 export default class ArenaView {
 
@@ -14,6 +15,7 @@ export default class ArenaView {
         this.localeManager = localeManager;
 
         this.__build_layout__();
+        this.__build_centerPanelGameOver__();
     }
 
     __build_layout__() {
@@ -25,37 +27,41 @@ export default class ArenaView {
         this.rowLayout = [];
         this.cardInHand = [];
 
-        this.headerPanel = new SplitLayout(true, 0.75, 0.25);
+        this.headerPanel = new SplitLayout(true, 0.66, 0.33);
         this.headerPanel.backgroundColor = "rgba(35, 35, 35, 0.65)";
+
         this.layout.setComponent(0, this.headerPanel);
 
         {
+            this.logoRoundLayout = new SplitLayout(true);
+            this.headerPanel.setComponent(0, this.logoRoundLayout);
+
             this.logoLayout = new MarginLayout({left:0.015, top:0, right:0, bottom:0});
-            this.headerPanel.setComponent(0, this.logoLayout);
+            this.logoRoundLayout.setComponent(0, this.logoLayout);
 
             this.logoLabel = new Label(this.localeManager.locale.LOGO_LABEL, LabelAlignment.LEFT);
             this.logoLabel.fillStyle = "white";
             this.logoLabel.fontSize = 24;
             this.logoLayout.setComponent(0, this.logoLabel);
 
-            this.navBarLayout = new GridLayout({rows: 1, cols: 2});
-            this.headerPanel.setComponent(1, this.navBarLayout);
+            this.roundLabel = new Label(this.localeManager.locale.ROUND + ' 1', LabelAlignment.CENTER);
+            this.roundLabel.fillStyle = "white";
+            this.roundLabel.fontSize = 24;
+            this.logoRoundLayout.setComponent(1, this.roundLabel);
 
-            this.leaveGameButtonLayout = new MarginLayout({ top:0.15, left:0.10, bottom:0.15, right:0.10 });
-            this.navBarLayout.setComponent({row: 0, col: 0}, this.leaveGameButtonLayout)
+            this.leaveGameButtonLayout = new MarginLayout({ top:0.15, left:0.60, bottom:0.15, right:0 });
+            this.headerPanel.setComponent(1, this.leaveGameButtonLayout);
 
             this.leaveGameButton = new Button(this.localeManager.locale.LEAVE_GAME);
             this.leaveGameButtonLayout.setComponent(0, this.leaveGameButton);
-
-            this.logoutButtonLayout = new MarginLayout({ top:0.15, left:0.10, bottom:0.15, right:0.10 });
-            this.navBarLayout.setComponent({row: 0, col: 1}, this.logoutButtonLayout);
-
-            this.logoutButton = new Button(this.localeManager.locale.LOGOUT);
-            this.logoutButtonLayout.setComponent(0, this.logoutButton);
         }
 
         this.centerPanelWrapper = new BorderLayout();
         this.layout.setComponent(1, this.centerPanelWrapper);
+
+        this.messageLabel = new Label("", LabelAlignment.CENTER);
+        this.messageLabel.fillStyle = "white";
+        this.centerPanelWrapper.setComponent(0, this.messageLabel);
 
         this.centerPanel = new GridLayout({rows: 5, cols: 1});
         this.centerPanelWrapper.setComponent(1, this.centerPanel);
@@ -172,12 +178,46 @@ export default class ArenaView {
         this.footerLayout.setComponent(0, this.footerPanel);
     }
 
+    __build_centerPanelGameOver__() {
+        this.centerPanelGameOver = new GridLayout({rows: 7, cols: 1});
+
+        this.claimTitle = new Label(this.localeManager.locale.CLAIM.toUpperCase(), LabelAlignment.CENTER);
+        this.claimTitle.fillStyle = "white";
+        this.claimTitle.fontSize = 28;
+        this.centerPanelGameOver.setComponent({row: 1, col: 0}, this.claimTitle);
+
+        this.claimCaller = new Label(this.localeManager.locale.BY + " " + this.localeManager.locale.DEFAULT_USERNAME,
+            LabelAlignment.CENTER);
+        this.claimCaller.fillStyle = "white";
+        this.claimCaller.fontSize = 28;
+        this.centerPanelGameOver.setComponent({row: 2, col: 0}, this.claimCaller);
+
+        this.winOrLoss = new Label("", LabelAlignment.CENTER);
+        this.winOrLoss.fillStyle = "white";
+        this.winOrLoss.fontSize = 28;
+        this.centerPanelGameOver.setComponent({row:3, col: 0}, this.winOrLoss);
+
+        this.winningHandLayout = new GridLayout({rows: 1, cols: 9});
+        this.centerPanelGameOver.setComponent({row:4, col: 0}, this.winningHandLayout);
+
+        this.winningCard = [];
+        for (let i = 2; i < 7; ++i) {
+            this.winningCard[i - 2] = new Image(ResourceManager.getAsset("purple-back"));
+            this.winningHandLayout.setComponent({row:0, col: i}, this.winningCard[i - 2]);
+        }
+
+        this.otherWinners = new Label("", LabelAlignment.CENTER);
+        this.otherWinners.fillStyle = "white";
+        this.otherWinners.fontSize = 28;
+        this.centerPanelGameOver.setComponent({row:5, col:0}, this.otherWinners);
+    }
+
     setLeaveGameButtonConsumer(consumer) {
         this.leaveGameButton.onButtonClicked(consumer);
     }
 
-    setLogoutButtonConsumer(consumer) {
-        this.logoutButton.onButtonClicked(consumer);
+    setRound(round, maxRounds) {
+        this.roundLabel.text = this.localeManager.locale.ROUND + " " + round;
     }
 
     setDropButtonConsumer(consumer) {
@@ -286,6 +326,58 @@ export default class ArenaView {
         for (let i = 0; i < 5; ++i) {
             this.cardInHand[i].onImageClicked(() => {});
         }
+    }
+
+    setMessage(message, timer = 3000) {
+        this.messageLabel.text = message;
+
+        setTimeout(() => { this.messageLabel.text = ""; }, timer);
+    }
+
+    putGameOverPanel() {
+        this.layout.setComponent(1, this.centerPanelGameOver);
+    }
+
+    setClaimScore(score) {
+        this.claimTitle.text = this.localeManager.locale.CLAIM.toUpperCase() + " "
+            + this.localeManager.locale.SCORE.toUpperCase() + " "
+            + score;
+    }
+
+    setClaimCaller(username) {
+        this.claimCaller.text = this.localeManager.locale.BY.toUpperCase() + " " + username;
+    }
+
+    setCallerWins(callerWins, realWinner) {
+        if (callerWins) {
+            this.winOrLoss.text = this.localeManager.locale.WINNER_MESSAGE.toUpperCase();
+        } else {
+            this.winOrLoss.text = this.localeManager.locale.LOSER_MESSAGE_BEFORE.toUpperCase()
+                + " " + realWinner + " "
+                + this.localeManager.locale.LOSER_MESSAGE_AFTER.toUpperCase();
+        }
+    }
+
+    setWinningCardVisible(cardIndex, visible) {
+        this.winningCard[cardIndex].visible = visible;
+    }
+
+    setWinningCard(cardIndex, assetId) {
+        this.winningCard[cardIndex].setImage(ResourceManager.getAsset(assetId));
+    }
+
+    setOtherWinners(otherWinners) {
+        if (otherWinners.length === 0) {
+            return;
+        }
+
+        let winnersNames = "";
+        for (let i = 0; i < otherWinners.length; ++i) {
+            winnersNames += otherWinners[i] + ", ";
+        }
+        winnersNames = winnersNames.substr(0, winnersNames.length - 2);
+
+        this.otherWinners.text = this.localeManager.locale.OTHER_WINNERS.toUpperCase() + " " + winnersNames;
     }
 
     // TODO: Drag and drop for drop in the future

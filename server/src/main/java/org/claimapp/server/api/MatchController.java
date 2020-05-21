@@ -1,6 +1,7 @@
 package org.claimapp.server.api;
 
 import org.claimapp.server.dto.MessageDTO;
+import org.claimapp.server.dto.RankingDTO;
 import org.claimapp.server.dto.TurnEndDTO;
 import org.claimapp.server.dto.UserScoreClaimDTO;
 import org.claimapp.server.entity.GameState;
@@ -39,9 +40,9 @@ public class MatchController {
 
     @PostMapping("/{lobbyId}/claim")
     public void playerCalledClaim(@PathVariable("lobbyId") UUID lobbyId) {
-        List<UserScoreClaimDTO> winners = gameManager.getRankingOfGameState(lobbyId);
+        RankingDTO rankingDTO = gameManager.getRankingOfGameState(lobbyId);
 
-        MessageDTO<List<UserScoreClaimDTO>> message = new MessageDTO<>("claim", lobbyId, winners);
+        MessageDTO<RankingDTO> message = new MessageDTO<>("claim", lobbyId, rankingDTO);
         simpMessagingTemplate.convertAndSend("/topic/lobby", message);
     }
 

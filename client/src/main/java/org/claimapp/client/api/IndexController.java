@@ -36,10 +36,4 @@ public class IndexController {
         mav.setViewName("redirect:/login");
         return mav;
     }
-
-    @GetMapping("/socket")
-    public ModelAndView getTestPage(ModelAndView mav) {
-        mav.setViewName("test_socket/index");
-        return mav;
-    }
 }

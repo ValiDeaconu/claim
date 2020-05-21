@@ -1,9 +1,6 @@
 package org.claimapp.server.service.impl;
 
-import org.claimapp.server.dto.PairDTO;
-import org.claimapp.server.dto.TurnEndDTO;
-import org.claimapp.server.dto.UserDTO;
-import org.claimapp.server.dto.UserScoreClaimDTO;
+import org.claimapp.server.dto.*;
 import org.claimapp.server.entity.*;
 import org.claimapp.server.entity.misc.CardRank;
 import org.claimapp.server.mapper.UserMapper;
@@ -11,10 +8,12 @@ import org.claimapp.server.repository.GameStateRepository;
 import org.claimapp.server.service.DeckService;
 import org.claimapp.server.service.GameManager;
 import org.claimapp.server.service.HandService;
+import org.claimapp.server.service.LobbyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class GameManagerImpl implements GameManager {
@@ -22,18 +21,20 @@ public class GameManagerImpl implements GameManager {
     private final GameStateRepository gameStateRepository;
 
     private final DeckService deckService;
-
     private final HandService handService;
+    private final LobbyService lobbyService;
 
     private final UserMapper userMapper;
 
     @Autowired
     public GameManagerImpl(DeckService deckService,
                            HandService handService,
+                           LobbyService lobbyService,
                            UserMapper userMapper,
                            GameStateRepository gameStateRepository) {
         this.deckService = deckService;
         this.handService = handService;
+        this.lobbyService = lobbyService;
 
         this.userMapper = userMapper;
 
@@ -79,6 +80,7 @@ public class GameManagerImpl implements GameManager {
         gameState.setUserHands(hands);
         gameState.setThrownDeck(thrownDeck);
         gameState.setTurn(turn);
+        gameState.setCurrentRound(1);
 
         gameStateRepository.save(lobbyId, gameState);
 
@@ -140,9 +142,14 @@ public class GameManagerImpl implements GameManager {
             // update user hand
             gameState.getUserHands().set(currentTurn, userHand);
 
-            // compute next turn
+            // compute next turn (increase round when it's necessary)
             int modulo = gameState.getUserHands().size();
-            gameState.setTurn((gameState.getTurn() + 1) % modulo);
+            if (gameState.getTurn() + 1 >= modulo) {
+                gameState.setTurn(0);
+                gameState.setCurrentRound(gameState.getCurrentRound() + 1);
+            } else {
+                gameState.setTurn(gameState.getTurn() + 1);
+            }
 
             gameStateRepository.update(lobbyId, gameState);
 
@@ -153,17 +160,24 @@ public class GameManagerImpl implements GameManager {
     }
 
     @Override
-    public List<UserScoreClaimDTO> getRankingOfGameState(UUID lobbyId) {
+    public RankingDTO getRankingOfGameState(UUID lobbyId) {
         Optional<GameState> gameStateOptional = gameStateRepository.find(lobbyId);
 
         if (gameStateOptional.isPresent()) {
+            // set lobby as not running anymore
+            lobbyService.endMatch(lobbyId);
+
+            // compute other
             GameState gameState = gameStateOptional.get();
 
             List<Hand> userHands = gameState.getUserHands();
 
             List<Integer> userScores = new ArrayList<>();
+            Map<Long, Integer> userIdToScore = new HashMap<>();
             for (Hand hand : userHands) {
-                userScores.add(handService.getScore(hand, gameState.getTrump()));
+                int score = handService.getScore(hand, gameState.getTrump());
+                userScores.add(score);
+                userIdToScore.put(hand.getUser().getId(), score);
             }
 
             int userWhoCalledClaimScore = userScores.get(gameState.getTurn());
@@ -189,7 +203,23 @@ public class GameManagerImpl implements GameManager {
                 userScoreClaimDTO.setCalledClaim(true);
                 userScoreClaimDTO.setScore(userWhoCalledClaimScore);
 
-                return Collections.singletonList(userScoreClaimDTO);
+                RankingDTO rankingDTO = new RankingDTO();
+                rankingDTO.setWinners(Collections.singletonList(userScoreClaimDTO));
+
+                List<UserScoreClaimDTO> losers = userHands
+                        .stream()
+                        .map(Hand::getUser)
+                        .filter(u -> !u.getId().equals(winner.getId()))
+                        .map(userMapper::toDTO)
+                        .map(userDTO -> new UserScoreClaimDTO(
+                                userDTO,
+                                userIdToScore.get(userDTO.getId()),
+                                false)
+                        )
+                        .collect(Collectors.toList());
+                rankingDTO.setLosers(losers);
+
+                return rankingDTO;
             }
 
             usersWhoBeatUserWhoCalledClaim.sort((o1, o2) -> {
@@ -199,8 +229,12 @@ public class GameManagerImpl implements GameManager {
                 return Integer.compare(lUserScore, rUserScore);
             });
 
+            boolean[] checkedPlayers = new boolean[userHands.size()];
+
             List<UserScoreClaimDTO> winners = new ArrayList<>();
             for (int userIndex : usersWhoBeatUserWhoCalledClaim) {
+                checkedPlayers[userIndex] = true;
+
                 User user = gameState.getUserHands().get(userIndex).getUser();
                 UserDTO userDTO = userMapper.toDTO(user);
 
@@ -212,7 +246,23 @@ public class GameManagerImpl implements GameManager {
                 winners.add(userScoreClaimDTO);
             }
 
-            return winners;
+            List<UserScoreClaimDTO> losers = new ArrayList<>();
+            for (int i = 0; i < userHands.size(); ++i) {
+                if (checkedPlayers[i])
+                    continue;
+
+                User user = gameState.getUserHands().get(i).getUser();
+                UserDTO userDTO = userMapper.toDTO(user);
+
+                UserScoreClaimDTO userScoreClaimDTO = new UserScoreClaimDTO();
+                userScoreClaimDTO.setUserDTO(userDTO);
+                userScoreClaimDTO.setScore(userScores.get(i));
+                userScoreClaimDTO.setCalledClaim(i == gameState.getTurn());
+
+                losers.add(userScoreClaimDTO);
+            }
+
+            return new RankingDTO(winners, losers);
         }
 
         return null;

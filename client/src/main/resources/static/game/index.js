@@ -31,7 +31,8 @@ window.addEventListener('load', () => {
     ResourceManager.loadAssets();
 
     // server address
-    const serverAddress = 'http://claim.ddns.net:8091';
+    //const serverAddress = 'http://claim.ddns.net:8091';
+    const serverAddress = 'http://localhost:8091';
 
     let viewManager = new ViewManager(Locale_EN, currentUser, serverAddress);
 

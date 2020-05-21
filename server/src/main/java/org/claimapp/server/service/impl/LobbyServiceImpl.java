@@ -141,5 +141,21 @@ public class LobbyServiceImpl implements LobbyService {
         return null;
     }
 
+    @Override
+    public Lobby endMatch(UUID lobbyId) {
+        Optional<Lobby> lobbyOptional = lobbyRepository.findById(lobbyId);
+
+        if (lobbyOptional.isPresent()) {
+            Lobby lobby = lobbyOptional.get();
+            lobby.setRunning(false);
+
+            lobbyRepository.update(lobby);
+
+            return lobby;
+        }
+
+        return null;
+    }
+
 
 }

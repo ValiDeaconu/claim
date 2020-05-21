@@ -1,5 +1,6 @@
 package org.claimapp.server.service;
 
+import org.claimapp.server.dto.RankingDTO;
 import org.claimapp.server.dto.TurnEndDTO;
 import org.claimapp.server.dto.UserScoreClaimDTO;
 import org.claimapp.server.entity.GameState;
@@ -15,5 +16,5 @@ public interface GameManager {
 
     GameState addMoveToCurrentGameState(UUID lobbyId, TurnEndDTO turnEndDTO);
 
-    List<UserScoreClaimDTO> getRankingOfGameState(UUID lobbyId);
+    RankingDTO getRankingOfGameState(UUID lobbyId);
 }

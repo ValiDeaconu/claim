@@ -3,12 +3,14 @@ package org.claimapp.server.entity;
 import java.util.List;
 
 public class GameState {
+    public static final int MAX_ROUNDS = 10;
 
     private Deck remainingDeck;
     private Card trump;
     private Deck thrownDeck;
     private List<Hand> userHands;
     private int turn;
+    private int currentRound;
 
     public GameState() {
     }
@@ -51,5 +53,13 @@ public class GameState {
 
     public void setTurn(int turn) {
         this.turn = turn;
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
+
+    public void setCurrentRound(int currentRound) {
+        this.currentRound = currentRound;
     }
 }
