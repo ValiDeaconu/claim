@@ -61,3 +61,10 @@ export const UnknownAvatars = {
     files: ["unknown.png"],
     ids: ["user-unknown"]
 };
+
+export var ProfileAssetPack = [];
+{
+    UnknownAvatars.ids.forEach(assetId => ProfileAssetPack.push(assetId));
+    MaleAvatars.ids.forEach(assetId => ProfileAssetPack.push(assetId));
+    FemaleAvatars.ids.forEach(assetId => ProfileAssetPack.push(assetId));
+}

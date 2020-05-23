@@ -1,10 +1,11 @@
 import Request, {RequestMethod} from "/game/server/requesthandler.js";
 import {Views} from "/game/view/viewmanager.js";
 import ConnectionHandler from "/game/server/connectionhandler.js";
+import {ProfileAssetPack} from "/game/misc/assets.js";
 
 export default class HomeController {
 
-    constructor(homeView, viewManager,serverAddress) {
+    constructor(homeView, viewManager, serverAddress) {
         this.ui = homeView;
 
         this.viewManager = viewManager;
@@ -27,7 +28,11 @@ export default class HomeController {
                 this.viewManager.updateUrl();
             });
 
-            let sendUser = { id: this.viewManager.currentUser.id, username: this.viewManager.currentUser.username };
+            let sendUser = {
+                id: this.viewManager.currentUser.id,
+                username: this.viewManager.currentUser.username,
+                profileAssetIndex : this.viewManager.currentUser.profileAssetIndex
+            };
             createLobbyRequest.send(RequestMethod.POST, "/lobby/create", JSON.stringify(sendUser));
         });
 
@@ -67,6 +72,28 @@ export default class HomeController {
             checkLobbyExistsRequest.send(RequestMethod.GET, "/lobby/code/" + accessCode);
         });
 
+        if (!this.viewManager.currentUser.profileAssetIndex) {
+            this.viewManager.currentUser.profileAssetIndex = 0;
+            this.ui.setProfilePictureAsset(ProfileAssetPack[0]);
+        }
+
+        this.ui.setProfilePictureOnImageClicked(() => {
+            this.viewManager.currentUser.profileAssetIndex = (this.viewManager.currentUser.profileAssetIndex + 1) % ProfileAssetPack.length;
+            this.ui.setProfilePictureAsset(ProfileAssetPack[this.viewManager.currentUser.profileAssetIndex]);
+        });
+
+        let hoverDisappearTid = null;
+        this.ui.setProfilePictureOnImageHover(() => {
+            if (hoverDisappearTid === null) {
+                this.ui.setProfilePictureHoverLabelVisible(true);
+                hoverDisappearTid = setTimeout(() => {
+                    this.ui.setProfilePictureHoverLabelVisible(false);
+                    hoverDisappearTid = null;
+                }, 1000);
+            }
+        })
+
+        // TODO: Remove this
         let request = new Request(this.serverAddress, () => {
             this.ui.setServerStatus(true);
         }, () => {

@@ -6,6 +6,7 @@ import Image from "/game/component/image.js";
 import {roundRect} from "/game/misc/roundrect.js";
 import GridLayout from "/game/layout/gridlayout.js";
 import ResourceManager from "/game/misc/resourcemanager.js";
+import {ProfileAssetPack} from "/game/misc/assets.js";
 
 export default class ArenaPlayerCard extends Component {
     constructor(localeManager) {
@@ -110,7 +111,7 @@ export default class ArenaPlayerCard extends Component {
     setPlayer(user) {
         this.nameLabel.text = user.username;
 
-        this.playerImage.setImage(user.image);
+        this.playerImage.setImage(ResourceManager.getAsset(ProfileAssetPack[user.profileAssetIndex]));
 
         this.__changeLastComponent__(false);
 
@@ -122,7 +123,7 @@ export default class ArenaPlayerCard extends Component {
     unsetPlayer() {
         this.nameLabel.text = this.localeManager.locale.DEFAULT_USERNAME;
 
-        this.playerImage.setImage(AvatarManager.getUnknownAvatar());
+        this.playerImage.setImage(ResourceManager.getAsset("user-unknown"));
 
         this.__changeLastComponent__(true);
 

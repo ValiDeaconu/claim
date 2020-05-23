@@ -18,7 +18,7 @@ window.addEventListener('load', () => {
         username: $("#current-user-username").val(),
         wins: parseInt($("#current-user-wins").val()),
         loss: parseInt($("#current-user-loss").val()),
-        image: AvatarManager.getRandomAvatar(Math.floor(Math.random() * 2))
+        profileAssetIndex: 0,
     };
 
     let currentLobby = {

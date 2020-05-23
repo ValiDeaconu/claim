@@ -30,5 +30,6 @@ export const Locale_EN = {
     WINNER_MESSAGE:         "He/She wins with this magical hand:",
     LOSER_MESSAGE_BEFORE:   "But he/she lost to ",
     LOSER_MESSAGE_AFTER:    "'s magical hand",
-    OTHER_WINNERS:          "Also to"
+    OTHER_WINNERS:          "Also to",
+    PROFILE_HOVER:          "Click to choose your avatar",
 };

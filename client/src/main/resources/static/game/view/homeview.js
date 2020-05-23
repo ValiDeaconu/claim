@@ -5,6 +5,8 @@ import MarginLayout from "/game/layout/marginlayout.js";
 import Button from "/game/component/button.js";
 import GridLayout from "/game/layout/gridlayout.js";
 import TextField from "/game/component/textfield.js";
+import InteractiveImage from "/game/component/interactiveimage.js";
+import ResourceManager from "/game/misc/resourcemanager.js";
 
 export default class HomeView {
 
@@ -55,10 +57,14 @@ export default class HomeView {
             this.userInfoPanel.backgroundColor = "rgba(35, 35, 35, 0.65)";
             this.centerPanel.setComponent(0, this.userInfoPanel);
 
-            this.welcomeLabel = new Label(this.localeManager.locale.WELCOME, LabelAlignment.CENTER);
-            this.welcomeLabel.fillStyle = "white";
-            this.welcomeLabel.fontSize = 18;
-            this.userInfoPanel.setComponent({row: 2, col: 0}, this.welcomeLabel);
+            this.profilePictureHoverLabel = new Label(this.localeManager.locale.PROFILE_HOVER);
+            this.profilePictureHoverLabel.fillStile = "rgba(255, 255, 255, 1)";
+            this.profilePictureHoverLabel.fontSize = 12;
+            this.profilePictureHoverLabel.visible = false;
+            this.userInfoPanel.setComponent({row: 1, col: 0}, this.profilePictureHoverLabel);
+
+            this.profilePicture = new InteractiveImage(ResourceManager.getAsset("user-unknown"));
+            this.userInfoPanel.setComponent({row: 2, col: 0}, this.profilePicture);
 
             this.usernameLabel = new Label(this.localeManager.locale.DEFAULT_USERNAME, LabelAlignment.CENTER);
             this.usernameLabel.fillStyle = "white";
@@ -112,6 +118,7 @@ export default class HomeView {
         this.footerPanel.fillStyle = "rgb(0, 64, 64)";
         this.footerPanel.fontSize = 12;
         this.footerLayout.setComponent(0, this.footerPanel);
+
     }
 
     setUsernameLabelText(text) {
@@ -136,6 +143,22 @@ export default class HomeView {
 
     addJoinButtonConsumer(consumer) {
         this.joinButton.onButtonClicked(consumer);
+    }
+
+    setProfilePictureOnImageHover(consumer) {
+        this.profilePicture.onImageHovered(consumer);
+    }
+
+    setProfilePictureOnImageClicked(consumer) {
+        this.profilePicture.onImageClicked(consumer);
+    }
+
+    setProfilePictureAsset(assetId) {
+        this.profilePicture.setImage(ResourceManager.getAsset(assetId));
+    }
+
+    setProfilePictureHoverLabelVisible(visible) {
+        this.profilePictureHoverLabel.visible = visible;
     }
 
     setServerStatus(status) {

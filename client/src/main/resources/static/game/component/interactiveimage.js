@@ -1,5 +1,6 @@
 import {isPointInsideBoundingBox} from "/game/misc/math.js";
 import Image from "/game/component/image.js";
+import Label from "/game/component/label.js";
 
 export default class InteractiveImage extends Image {
     constructor(imageSrc) {

@@ -11,10 +11,12 @@ export default class Label extends Component {
                 labelAlignment = LabelAlignment.CENTER) {
         super();
 
+        this.visible = true;
+
         this.text = text;
         this.labelAlignment = labelAlignment;
 
-        this.fillStyle = "#000";
+        this.fillStyle = "rgba(255, 255, 255, 1)";
 
         this.fontSize = 16;
         this.__defaultFontSize__ = this.fontSize;
@@ -94,6 +96,9 @@ export default class Label extends Component {
     }
 
     draw(context) {
+        if (!this.visible)
+            return;
+
         context.font = this.fontSize + "px " + this.font;
         context.textAlign = this._textAlign;
         context.fillStyle = this.fillStyle;

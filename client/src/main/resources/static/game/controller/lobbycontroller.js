@@ -1,7 +1,6 @@
 import Request, {RequestMethod} from "/game/server/requesthandler.js";
 import {Views} from "/game/view/viewmanager.js";
 import ConnectionHandler from "/game/server/connectionhandler.js";
-import AvatarManager from "/game/misc/avatarmanager.js";
 
 export default class LobbyController {
     constructor(lobbyView, viewManager, serverAddress) {
@@ -23,8 +22,6 @@ export default class LobbyController {
             if (this.lobby.players[i].id === this.viewManager.currentUser.id) {
                 currentPlayerIndexInLobby = i;
             }
-
-            this.lobby.players[i].image = AvatarManager.getRandomAvatar(Math.floor(Math.random() * 2))
         }
 
         this.ui.playerCard[0].setPlayer(this.lobby.players[currentPlayerIndexInLobby]);

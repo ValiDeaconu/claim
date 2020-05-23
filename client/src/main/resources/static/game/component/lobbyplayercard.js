@@ -5,6 +5,8 @@ import Label, {LabelAlignment}  from "/game/component/label.js";
 import Image from "/game/component/image.js";
 import {roundRect} from "/game/misc/roundrect.js";
 import GridLayout from "/game/layout/gridlayout.js";
+import ResourceManager from "/game/misc/resourcemanager.js";
+import {ProfileAssetPack} from "/game/misc/assets.js";
 
 export default class LobbyPlayerCard extends Component {
     constructor(localeManager) {
@@ -95,7 +97,7 @@ export default class LobbyPlayerCard extends Component {
     setPlayer(user) {
         this.nameLabel.text = user.username;
 
-        this.playerImage.setImage(user.image);
+        this.playerImage.setImage(ResourceManager.getAsset(ProfileAssetPack[user.profileAssetIndex]));
 
         let winRate = (user.wins + user.loss > 0) ? Math.round((user.wins / (user.wins + user.loss)) * 10000) / 100 : 0;
         this.winRateLabel.text = this.localeManager.locale.WIN_RATE + ": " + winRate + "%";

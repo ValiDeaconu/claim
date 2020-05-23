@@ -4,6 +4,7 @@ public class User {
 
     private Long id;
     private String username;
+    private int profileAssetIndex;
 
     public Long getId() {
         return id;
@@ -19,5 +20,13 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public int getProfileAssetIndex() {
+        return profileAssetIndex;
+    }
+
+    public void setProfileAssetIndex(int profileAssetIndex) {
+        this.profileAssetIndex = profileAssetIndex;
     }
 }
