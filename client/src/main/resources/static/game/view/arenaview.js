@@ -19,7 +19,7 @@ export default class ArenaView {
     }
 
     __build_layout__() {
-        this.layout = new BorderLayout();
+        this.layout = new SplitLayout(false, 0.10, 0.90);
         this.layout.size = { width: document.body.clientWidth, height: document.body.clientHeight };
 
         this.playerCard = [];
@@ -165,17 +165,6 @@ export default class ArenaView {
             this.claimButton = new Button(this.localeManager.locale.CLAIM);
             claimButtonLayout.setComponent(0, this.claimButton);
         }
-
-        this.footerLayout = new MarginLayout({top:0.0, left:0.0, bottom:0.0, right:0.0});
-        this.footerLayout.backgroundColor = "rgba(81, 196, 146, 0.85)";
-        this.layout.setComponent(2, this.footerLayout);
-
-        this.footerPanel = new Label(
-            this.localeManager.locale.SERVER_STATUS + ": " + this.localeManager.locale.CONNECTED,
-            LabelAlignment.CENTER);
-        this.footerPanel.fillStyle = "rgb(0, 64, 64)";
-        this.footerPanel.fontSize = 12;
-        this.footerLayout.setComponent(0, this.footerPanel);
     }
 
     __build_centerPanelGameOver__() {

@@ -32,4 +32,6 @@ export const Locale_EN = {
     LOSER_MESSAGE_AFTER:    "'s magical hand",
     OTHER_WINNERS:          "Also to",
     PROFILE_HOVER:          "Click to choose your avatar",
+    HOSTED_BY:              "Hosted by",
+    AVAILABLE_SLOTS:        "Slots",
 };

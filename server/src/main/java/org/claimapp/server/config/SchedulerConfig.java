@@ -1,6 +1,6 @@
 package org.claimapp.server.config;
 
-import org.claimapp.server.dto.SingletonDTO;
+import org.claimapp.common.dto.SingletonDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

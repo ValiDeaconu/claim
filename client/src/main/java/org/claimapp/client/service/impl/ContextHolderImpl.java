@@ -1,6 +1,7 @@
 package org.claimapp.client.service.impl;
 
-import org.claimapp.client.dto.IdDTO;
+import org.claimapp.common.dto.IdDTO;
+
 import org.claimapp.client.misc.ContextHolderConstants;
 import org.claimapp.client.service.ContextHolder;
 import org.springframework.stereotype.Service;

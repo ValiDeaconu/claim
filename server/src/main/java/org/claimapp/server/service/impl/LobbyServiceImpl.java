@@ -1,29 +1,32 @@
 package org.claimapp.server.service.impl;
 
-import org.claimapp.server.entity.Lobby;
+import org.claimapp.server.model.Lobby;
 import org.claimapp.server.entity.User;
 import org.claimapp.server.repository.LobbyRepository;
+import org.claimapp.server.service.AccessCodeGenerator;
 import org.claimapp.server.service.LobbyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class LobbyServiceImpl implements LobbyService {
 
     private final LobbyRepository lobbyRepository;
+    private final AccessCodeGenerator accessCodeGenerator;
 
     @Autowired
-    public LobbyServiceImpl(LobbyRepository lobbyRepository) {
+    public LobbyServiceImpl(LobbyRepository lobbyRepository,
+                            AccessCodeGenerator accessCodeGenerator) {
         this.lobbyRepository = lobbyRepository;
+        this.accessCodeGenerator = accessCodeGenerator;
     }
 
 
     @Override
-    public Lobby getLobbyById(UUID id) {
+    public Lobby getLobbyById(Long id) {
         return lobbyRepository.findById(id).orElse(null);
     }
 
@@ -34,32 +37,43 @@ public class LobbyServiceImpl implements LobbyService {
 
     @Override
     public Lobby create(User host) {
-        Optional<Lobby> lobbyOptional = lobbyRepository.create(host);
+        Lobby lobby = new Lobby();
 
-        return lobbyOptional.orElse(null);
+        List<User> userList = new LinkedList<>();
+        userList.add(host);
+        lobby.setPlayers(userList);
+        lobby.setRunning(false);
+        lobby.setVisible(false);
+        lobby.setAccessCode(accessCodeGenerator.next());
+
+        return lobbyRepository.save(lobby);
     }
 
     @Override
-    public boolean remove(UUID id) {
-        return lobbyRepository.remove(id);
+    public Lobby save(Lobby lobby) {
+        return lobbyRepository.save(lobby);
     }
 
     @Override
-    public Lobby flipVisibility(UUID lobbyId) {
+    public void remove(Long id) {
+        lobbyRepository.deleteById(id);
+    }
+
+    @Override
+    public Lobby flipVisibility(Long lobbyId) {
         Optional<Lobby> lobbyOptional = lobbyRepository.findById(lobbyId);
 
         if (lobbyOptional.isPresent()) {
             Lobby lobby = lobbyOptional.get();
             lobby.setVisible(!lobby.isVisible());
-            lobbyRepository.update(lobby);
-            return lobby;
+            return lobbyRepository.save(lobby);
         }
 
         return null;
     }
 
     @Override
-    public boolean userLeaveLobby(UUID lobbyId, Long userId) {
+    public boolean userLeaveLobby(Long lobbyId, Long userId) {
         Optional<Lobby> lobbyOptional = lobbyRepository.findById(lobbyId);
 
         if (lobbyOptional.isPresent()) {
@@ -75,10 +89,10 @@ public class LobbyServiceImpl implements LobbyService {
                 userList.remove(user);
 
                 if (userList.isEmpty()) {
-                    lobbyRepository.remove(lobbyId);
+                    lobbyRepository.deleteById(lobbyId);
                 } else {
                     lobby.setPlayers(userList);
-                    lobbyRepository.update(lobby);
+                    lobbyRepository.save(lobby);
                 }
 
                 return true;
@@ -91,7 +105,7 @@ public class LobbyServiceImpl implements LobbyService {
     }
 
     @Override
-    public Lobby userJoinLobby(UUID lobbyId, User user) {
+    public Lobby userJoinLobby(Long lobbyId, User user) {
         Optional<Lobby> lobbyOptional = lobbyRepository.findById(lobbyId);
 
         if (lobbyOptional.isPresent()) {
@@ -115,8 +129,7 @@ public class LobbyServiceImpl implements LobbyService {
                 userList.add(user);
                 lobby.setPlayers(userList);
 
-                lobbyRepository.update(lobby);
-
+                lobby = lobbyRepository.save(lobby);
             }
 
             return lobby;
@@ -126,35 +139,39 @@ public class LobbyServiceImpl implements LobbyService {
     }
 
     @Override
-    public Lobby startMatch(UUID lobbyId) {
+    public Lobby startMatch(Long lobbyId) {
         Optional<Lobby> lobbyOptional = lobbyRepository.findById(lobbyId);
 
         if (lobbyOptional.isPresent()) {
             Lobby lobby = lobbyOptional.get();
             lobby.setRunning(true);
 
-            lobbyRepository.update(lobby);
-
-            return lobby;
+            return lobbyRepository.save(lobby);
         }
 
         return null;
     }
 
     @Override
-    public Lobby endMatch(UUID lobbyId) {
+    public Lobby endMatch(Long lobbyId) {
         Optional<Lobby> lobbyOptional = lobbyRepository.findById(lobbyId);
 
         if (lobbyOptional.isPresent()) {
             Lobby lobby = lobbyOptional.get();
             lobby.setRunning(false);
 
-            lobbyRepository.update(lobby);
-
-            return lobby;
+            return lobbyRepository.save(lobby);
         }
 
         return null;
+    }
+
+    @Override
+    public List<Lobby> getAllPublicLobbies() {
+        return lobbyRepository.findAll()
+                .stream()
+                .filter(l -> l.isVisible() && !l.isRunning())
+                .collect(Collectors.toList());
     }
 
 

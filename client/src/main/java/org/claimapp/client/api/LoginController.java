@@ -1,11 +1,14 @@
 package org.claimapp.client.api;
 
-import org.claimapp.client.dto.IdDTO;
-import org.claimapp.client.dto.LoginUserDTO;
-import org.claimapp.client.entity.User;
+import org.claimapp.client.validator.UserValidator;
+import org.claimapp.common.dto.IdDTO;
+import org.claimapp.common.dto.LoginUserDTO;
+
 import org.claimapp.client.misc.ContextHolderConstants;
 import org.claimapp.client.service.ContextHolder;
-import org.claimapp.client.service.UserService;
+import org.claimapp.client.service.UserGateway;
+
+import org.claimapp.common.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -21,13 +24,17 @@ import javax.validation.Valid;
 @RequestMapping("/")
 public class LoginController {
 
-    private ContextHolder contextHolder;
-    private UserService userService;
+    private final ContextHolder contextHolder;
+    private final UserValidator userValidator;
+    private final UserGateway userGateway;
 
     @Autowired
-    public LoginController(ContextHolder contextHolder, UserService userService) {
+    public LoginController(ContextHolder contextHolder,
+                           UserGateway userGateway,
+                           UserValidator userValidator) {
         this.contextHolder = contextHolder;
-        this.userService = userService;
+        this.userGateway = userGateway;
+        this.userValidator = userValidator;
     }
 
     @GetMapping("/login")
@@ -52,15 +59,19 @@ public class LoginController {
                                               HttpServletResponse response,
                                               BindingResult bindingResult,
                                               ModelAndView mav) {
-        User user = userService.getUser(loginUserDTO, bindingResult);
+        userValidator.validateLoginUser(loginUserDTO, bindingResult);
 
-        if (user == null || bindingResult.hasErrors()) {
+        UserDTO userDTO = userGateway.getUser(loginUserDTO);
+        if (userDTO == null) {
             bindingResult.reject("CredentialsNotFound");
+        }
+
+        if (bindingResult.hasErrors()) {
             mav.setViewName("welcome/login");
             return mav;
         }
 
-        Cookie cookieWithCurrentUser = contextHolder.createCookieWithCurrentUser(new IdDTO(user.getId()));
+        Cookie cookieWithCurrentUser = contextHolder.createCookieWithCurrentUser(new IdDTO(userDTO.getId()));
         response.addCookie(cookieWithCurrentUser);
 
         mav.setViewName("redirect:/game/home");

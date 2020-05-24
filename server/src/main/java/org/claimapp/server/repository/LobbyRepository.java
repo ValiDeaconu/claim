@@ -1,19 +1,14 @@
 package org.claimapp.server.repository;
 
-import org.claimapp.server.entity.Lobby;
-import org.claimapp.server.entity.User;
+import org.claimapp.server.model.Lobby;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public interface LobbyRepository {
-    Optional<Lobby> findById(UUID id);
-    Optional<Lobby> findByHost(User host);
+    List<Lobby> findAll();
+    Optional<Lobby> findById(Long id);
     Optional<Lobby> findByAccessCode(String accessCode);
-
-    Optional<Lobby> create(User host);
-
-    Optional<Lobby> update(Lobby lobby);
-
-    boolean remove(UUID id);
+    Lobby save(Lobby lobby);
+    void deleteById(Long id);
 }

@@ -37,7 +37,7 @@ export default class HomeController {
         });
 
         this.ui.addLogoutButtonConsumer(() => {
-            window.location.href = '/user/logout';
+            window.location.href = '/game/logout';
         });
 
         this.ui.addJoinButtonConsumer(() => {
@@ -45,8 +45,8 @@ export default class HomeController {
 
             let checkLobbyExistsRequest = new Request(this.serverAddress, (lobby) => {
                 if (lobby) {
-
-                    let handler = new ConnectionHandler(this.serverAddress + "/game");
+                    this.__broadcastJoinLobby__(lobby.id);
+                    /*let handler = new ConnectionHandler(this.serverAddress + "/game");
                     handler.connect("/topic/lobby", () => {
                         let lobbyJoinPair = { first: lobby.id, second: this.viewManager.currentUser };
                         handler.send("/app/lobby/join", JSON.stringify(lobbyJoinPair));
@@ -63,7 +63,7 @@ export default class HomeController {
                             handler.disconnect();
                             this.viewManager.updateUrl();
                         }
-                    });
+                    });*/
                 } else {
                     alert("Requested lobby does not exists");
                 }
@@ -75,11 +75,24 @@ export default class HomeController {
         if (!this.viewManager.currentUser.profileAssetIndex) {
             this.viewManager.currentUser.profileAssetIndex = 0;
             this.ui.setProfilePictureAsset(ProfileAssetPack[0]);
+        } else {
+          this.ui.setProfilePictureAsset(ProfileAssetPack[this.viewManager.currentUser.profileAssetIndex]);
         }
 
         this.ui.setProfilePictureOnImageClicked(() => {
             this.viewManager.currentUser.profileAssetIndex = (this.viewManager.currentUser.profileAssetIndex + 1) % ProfileAssetPack.length;
             this.ui.setProfilePictureAsset(ProfileAssetPack[this.viewManager.currentUser.profileAssetIndex]);
+
+            let profileAssetIndexDTO = {
+                content: this.viewManager.currentUser.profileAssetIndex
+            };
+
+            (new Request(this.serverAddress))
+                .send(
+                    RequestMethod.POST,
+                    "/user/" + this.viewManager.currentUser.id + "/update/profile",
+                    JSON.stringify(profileAssetIndexDTO)
+                );
         });
 
         let hoverDisappearTid = null;
@@ -91,19 +104,65 @@ export default class HomeController {
                     hoverDisappearTid = null;
                 }, 1000);
             }
-        })
-
-        // TODO: Remove this
-        let request = new Request(this.serverAddress, () => {
-            this.ui.setServerStatus(true);
-        }, () => {
-            this.ui.setServerStatus(false);
         });
 
-        let statusChecker = function() {
-            request.send(RequestMethod.GET, "/status");
-            setTimeout(statusChecker, 10000);
-        };
-        statusChecker();
+        this.handler = new ConnectionHandler(this.serverAddress + "/game");
+        this.handler.connect("/topic/lobby/list");
+        this.handler.addOnReceiveCallback((jsonObject) => {
+            let command = jsonObject.command;
+
+            if (command === 'update') {
+                this.__updateLobbyList__(jsonObject.arg);
+            }
+        });
+
+        (new Request(this.serverAddress, (lobbyList) => {
+            this.__updateLobbyList__(lobbyList);
+        })).send(RequestMethod.GET, "/lobby/all");
+    }
+
+    __broadcastJoinLobby__(lobbyId) {
+        let socketHandler = new ConnectionHandler(this.serverAddress + "/game");
+        socketHandler.connect("/topic/lobby", () => {
+            socketHandler.send("/app/lobby/join", JSON.stringify({
+                first: lobbyId,
+                second: this.viewManager.currentUser
+            }));
+        });
+
+        socketHandler.addOnReceiveCallback((jsonObject) => {
+            let command = jsonObject.command;
+
+            if (command === 'update') {
+                let lobbyController = this.viewManager.setViewTo(Views.LOBBY);
+                lobbyController.lobby = jsonObject.arg;
+                lobbyController.update();
+                socketHandler.disconnect();
+                this.viewManager.updateUrl();
+            }
+        });
+    }
+
+    __updateLobbyList__(lobbyList) {
+        if (lobbyList.length === 0) {
+            this.ui.setLobbyList([]);
+        } else {
+            let lobbyShowList = [];
+            for (let i = 0; i < lobbyList.length; ++i) {
+                lobbyShowList.push({
+                    hostname: lobbyList[i].players[0].username,
+                    occupiedSlots: lobbyList[i].players.length,
+                    totalSlots: 5,
+                    lobbyId: lobbyList[i].id
+                });
+            }
+
+            let joinButtons = this.ui.setLobbyList(lobbyShowList);
+            for (let i = 0; i < joinButtons.length; ++i) {
+                joinButtons[i].onButtonClicked(() => {
+                    this.__broadcastJoinLobby__(lobbyShowList[i].lobbyId);
+                });
+            }
+        }
     }
 }

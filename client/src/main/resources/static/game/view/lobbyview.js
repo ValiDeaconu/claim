@@ -1,4 +1,3 @@
-import BorderLayout from "/game/layout/borderlayout.js";
 import SplitLayout from "/game/layout/splitlayout.js";
 import Label, {LabelAlignment} from "/game/component/label.js";
 import MarginLayout from "/game/layout/marginlayout.js";
@@ -15,7 +14,7 @@ export default class LobbyView {
     }
 
     __build_layout__() {
-        this.layout = new BorderLayout();
+        this.layout = new SplitLayout(false, 0.10, 0.90);
         this.layout.size = { width: document.body.clientWidth, height: document.body.clientHeight };
 
         this.playerCard = [];
@@ -35,20 +34,11 @@ export default class LobbyView {
             this.logoLabel.fontSize = 24;
             this.logoLayout.setComponent(0, this.logoLabel);
 
-            this.navBarLayout = new GridLayout({rows: 1, cols: 2});
+            this.navBarLayout = new MarginLayout({ top:0.15, left:0.55, bottom:0.15, right:0.05 });
             this.headerPanel.setComponent(1, this.navBarLayout);
 
-            this.leaveLobbyButtonLayout = new MarginLayout({ top:0.15, left:0.10, bottom:0.15, right:0.10 });
-            this.navBarLayout.setComponent({row: 0, col: 0}, this.leaveLobbyButtonLayout)
-
             this.leaveLobbyButton = new Button(this.localeManager.locale.LEAVE_LOBBY);
-            this.leaveLobbyButtonLayout.setComponent(0, this.leaveLobbyButton);
-
-            this.logoutButtonLayout = new MarginLayout({ top:0.15, left:0.10, bottom:0.15, right:0.10 });
-            this.navBarLayout.setComponent({row: 0, col: 1}, this.logoutButtonLayout);
-
-            this.logoutButton = new Button(this.localeManager.locale.LOGOUT);
-            this.logoutButtonLayout.setComponent(0, this.logoutButton);
+            this.navBarLayout.setComponent(0, this.leaveLobbyButton);
         }
 
         this.centerPanel = new GridLayout({rows: 5, cols: 1});
@@ -137,17 +127,6 @@ export default class LobbyView {
             this.playerCard[0].setReadyStatus(false);
             this.playerCard[0].setPreferredSize(playerCardPreferredSize);
         }
-
-        this.footerLayout = new MarginLayout({top:0.0, left:0.0, bottom:0.0, right:0.0});
-        this.footerLayout.backgroundColor = "rgba(81, 196, 146, 0.85)";
-        this.layout.setComponent(2, this.footerLayout);
-
-        this.footerPanel = new Label(
-            this.localeManager.locale.SERVER_STATUS + ": " + this.localeManager.locale.CONNECTED,
-            LabelAlignment.CENTER);
-        this.footerPanel.fillStyle = "rgb(0, 64, 64)";
-        this.footerPanel.fontSize = 12;
-        this.footerLayout.setComponent(0, this.footerPanel);
     }
 
     setStartMatchButtonVisibility(visibility) {

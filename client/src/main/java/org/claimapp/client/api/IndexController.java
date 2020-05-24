@@ -1,9 +1,10 @@
 package org.claimapp.client.api;
 
-import org.claimapp.client.dto.IdDTO;
+import org.claimapp.common.dto.IdDTO;
+
 import org.claimapp.client.misc.ContextHolderConstants;
 import org.claimapp.client.service.ContextHolder;
-import org.claimapp.client.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -13,13 +14,10 @@ import org.springframework.web.servlet.ModelAndView;
 @RequestMapping("/")
 public class IndexController {
 
-    private UserService userService;
-    private ContextHolder contextHolder;
+    private final ContextHolder contextHolder;
 
     @Autowired
-    public IndexController(UserService userService,
-                           ContextHolder contextHolder) {
-        this.userService = userService;
+    public IndexController(ContextHolder contextHolder) {
         this.contextHolder = contextHolder;
     }
 

@@ -1,16 +1,9 @@
 package org.claimapp.server.repository;
 
-import org.claimapp.server.entity.GameState;
-
-import java.util.Optional;
-import java.util.UUID;
+import org.claimapp.server.model.GameState;
 
 public interface GameStateRepository {
-    Optional<GameState> find(UUID lobbyId);
+    GameState save(GameState gameState);
 
-    Optional<GameState> save(UUID lobbyId, GameState gameState);
-
-    Optional<GameState> update(UUID lobbyId, GameState gameState);
-
-    boolean delete(UUID lobbyId);
+    void deleteById(Long id);
 }

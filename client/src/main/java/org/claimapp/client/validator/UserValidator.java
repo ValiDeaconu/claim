@@ -1,10 +1,8 @@
 package org.claimapp.client.validator;
 
-import org.claimapp.client.dto.LoginUserDTO;
-import org.claimapp.client.dto.RegisterUserDTO;
-import org.claimapp.client.entity.User;
-import org.claimapp.client.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.claimapp.common.dto.LoginUserDTO;
+import org.claimapp.common.dto.RegisterUserDTO;
+
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 
@@ -13,25 +11,6 @@ public class UserValidator {
 
     private static final String USERNAME_REGEX = "[a-zA-Z0-9_.]+";
     private static final String PASSWORD_REGEX = "[a-zA-Z0-9!@#$%^&*()_+=\\-]+";
-
-    private UserRepository userRepository;
-
-    @Autowired
-    public UserValidator(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public void validateUser(User user, BindingResult bindingResult) {
-        validateUsernameAndPassword(user.getUsername(), user.getPassword(), bindingResult);
-
-        if (user.getWins() < 0) {
-            bindingResult.rejectValue("wins", "NegativeWins");
-        }
-
-        if (user.getLoss() < 0) {
-            bindingResult.rejectValue("loss", "NegativeLoss");
-        }
-    }
 
     public void validateLoginUser(LoginUserDTO loginUserDTO, BindingResult bindingResult) {
         validateUsernameAndPassword(loginUserDTO.getUsername(), loginUserDTO.getPassword(), bindingResult);

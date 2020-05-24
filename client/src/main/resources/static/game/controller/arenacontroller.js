@@ -112,6 +112,7 @@ export default class ArenaController {
                         this.lobby.running = false;
 
                         let rankings = jsonObject.arg;
+
                         let winners = rankings.winners;
                         let losers = rankings.losers;
 

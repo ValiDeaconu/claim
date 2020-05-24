@@ -6,7 +6,6 @@ import {Locale_EN} from "/game/locale/locale_en.js";
 import ViewManager, {Views} from "/game/view/viewmanager.js";
 
 import ResourceManager from "/game/misc/resourcemanager.js";
-import AvatarManager from "/game/misc/avatarmanager.js";
 
 import Request, {RequestMethod} from "/game/server/requesthandler.js";
 
@@ -18,7 +17,7 @@ window.addEventListener('load', () => {
         username: $("#current-user-username").val(),
         wins: parseInt($("#current-user-wins").val()),
         loss: parseInt($("#current-user-loss").val()),
-        profileAssetIndex: 0,
+        profileAssetIndex: parseInt($("#current-user-profile-asset-index").val()),
     };
 
     let currentLobby = {
@@ -84,5 +83,27 @@ window.addEventListener('resize', () => {
         game.resize(document.body.clientWidth, document.body.clientHeight);
     }
 });
+
+window.onbeforeunload = function() {
+    console.log("Before unload");
+
+    if (game !== null && game.viewManager !== null) {
+        if (game.viewManager.currentView === Views.HOME)
+            return;
+
+        let controller = game.viewManager.controller;
+        let lobby = controller.lobby;
+
+        let request = new Request(game.serverAddress);
+
+        let lobbyUserPair = {
+            first: lobby.id,
+            second: game.viewManager.currentUser.id
+        };
+
+        request.send(RequestMethod.POST, "/lobby/leave", JSON.stringify(lobbyUserPair));
+        controller.handler.disconnect();
+    }
+}
 
 

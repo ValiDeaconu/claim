@@ -1,11 +1,14 @@
 package org.claimapp.client.api;
 
-import org.claimapp.client.dto.IdDTO;
-import org.claimapp.client.dto.RegisterUserDTO;
-import org.claimapp.client.entity.User;
+import org.claimapp.client.validator.UserValidator;
+import org.claimapp.common.dto.IdDTO;
+import org.claimapp.common.dto.RegisterUserDTO;
+
 import org.claimapp.client.misc.ContextHolderConstants;
 import org.claimapp.client.service.ContextHolder;
-import org.claimapp.client.service.UserService;
+import org.claimapp.client.service.UserGateway;
+
+import org.claimapp.common.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -21,13 +24,17 @@ import javax.validation.Valid;
 @RequestMapping("/")
 public class RegisterController {
 
-    private ContextHolder contextHolder;
-    private UserService userService;
+    private final ContextHolder contextHolder;
+    private final UserGateway userGateway;
+    private final UserValidator userValidator;
 
     @Autowired
-    public RegisterController(ContextHolder contextHolder, UserService userService) {
+    public RegisterController(ContextHolder contextHolder,
+                              UserGateway userGateway,
+                              UserValidator userValidator) {
         this.contextHolder = contextHolder;
-        this.userService = userService;
+        this.userGateway = userGateway;
+        this.userValidator = userValidator;
     }
 
     @GetMapping("/register")
@@ -51,7 +58,12 @@ public class RegisterController {
                                                  HttpServletResponse response,
                                                  BindingResult bindingResult,
                                                  ModelAndView mav) {
-        User registeredUser = userService.registerUser(registerUserDTO, bindingResult);
+        userValidator.validateRegisterUser(registerUserDTO, bindingResult);
+
+        UserDTO registeredUser = userGateway.registerUser(registerUserDTO);
+        if (registeredUser == null) {
+            bindingResult.reject("username", "UsernameAlreadyTaken");
+        }
 
         if (bindingResult.hasErrors()) {
             mav.setViewName("welcome/register");

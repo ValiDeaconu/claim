@@ -1,91 +1,64 @@
 package org.claimapp.server.repository.impl;
 
-import org.claimapp.server.entity.Lobby;
-import org.claimapp.server.entity.User;
+import org.claimapp.server.model.Lobby;
 import org.claimapp.server.repository.LobbyRepository;
-import org.claimapp.server.service.AccessCodeGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
+import org.claimapp.server.repository.misc.IdGenerator;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
-@Repository
+@Component
 public class LobbyRepositoryImpl implements LobbyRepository {
 
-    private final Map<UUID, Lobby> lobbyDb;
+    private final IdGenerator<Long> idGenerator;
 
-    private final AccessCodeGenerator accessCodeGenerator;
+    private final Map<Long, Lobby> lobbyDb;
 
-    @Autowired
-    public LobbyRepositoryImpl(AccessCodeGenerator accessCodeGenerator) {
+
+    public LobbyRepositoryImpl(IdGenerator<Long> idGenerator) {
+        this.idGenerator = idGenerator;
+
         this.lobbyDb = new HashMap<>();
-        this.accessCodeGenerator = accessCodeGenerator;
     }
 
     @Override
-    public Optional<Lobby> findById(UUID id) {
-        if (lobbyDb.containsKey(id)) {
+    public List<Lobby> findAll() {
+        return new ArrayList<>(lobbyDb.values());
+    }
+
+    @Override
+    public Optional<Lobby> findById(Long id) {
+        if (lobbyDb.containsKey(id))
             return Optional.of(lobbyDb.get(id));
-        }
 
         return Optional.empty();
-    }
-
-    @Override
-    public Optional<Lobby> findByHost(User host) {
-        return lobbyDb
-                .entrySet()
-                .stream()
-                .filter(e -> e.getValue().getPlayers().get(0).getId().equals(host.getId()))
-                .findFirst()
-                .map(Map.Entry::getValue);
     }
 
     @Override
     public Optional<Lobby> findByAccessCode(String accessCode) {
         return lobbyDb
-                .entrySet()
+                .values()
                 .stream()
-                .filter(e -> e.getValue().getAccessCode().equals(accessCode))
-                .findFirst()
-                .map(Map.Entry::getValue);
+                .filter(lobby -> lobby.getAccessCode().equals(accessCode))
+                .findFirst();
     }
 
     @Override
-    public Optional<Lobby> create(User host) {
-        Lobby lobby = new Lobby();
-
-        lobby.setId(UUID.randomUUID());
-
-        List<User> userList = new ArrayList<>();
-        userList.add(host);
-        lobby.setPlayers(userList);
-
-        lobby.setAccessCode(accessCodeGenerator.next());
-        lobby.setVisible(true);
-
-        lobbyDb.put(lobby.getId(), lobby);
-
-        return Optional.of(lobby);
-    }
-
-    @Override
-    public Optional<Lobby> update(Lobby lobby) {
-        if (lobbyDb.containsKey(lobby.getId())) {
+    public Lobby save(Lobby lobby) {
+        if (lobby.getId() == null || !lobbyDb.containsKey(lobby.getId())) {
+            lobby.setId(idGenerator.next());
+            lobbyDb.put(lobby.getId(), lobby);
+        } else {
             lobbyDb.replace(lobby.getId(), lobby);
-            return Optional.of(lobby);
         }
 
-        return Optional.empty();
+        return lobby;
     }
 
     @Override
-    public boolean remove(UUID id) {
-        if (lobbyDb.containsKey(id)) {
-            lobbyDb.remove(id);
-            return true;
-        }
-
-        return false;
+    public void deleteById(Long id) {
+        lobbyDb.remove(id);
     }
 }

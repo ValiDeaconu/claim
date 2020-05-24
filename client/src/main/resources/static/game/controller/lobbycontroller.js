@@ -59,6 +59,8 @@ export default class LobbyController {
             cardIndex++;
         }
 
+        this.ui.flipChangeVisibility(this.lobby.visible);
+
         this.ui.setPrivateCode(this.lobby.accessCode);
 
         this.ui.addChangeVisibilityConsumer(() => {

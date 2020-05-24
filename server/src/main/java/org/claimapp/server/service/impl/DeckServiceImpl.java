@@ -1,9 +1,11 @@
 package org.claimapp.server.service.impl;
 
-import org.claimapp.server.entity.Card;
-import org.claimapp.server.entity.Deck;
-import org.claimapp.server.entity.misc.CardRank;
-import org.claimapp.server.entity.misc.CardSuit;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.claimapp.server.model.Card;
+import org.claimapp.server.model.Deck;
+import org.claimapp.server.model.misc.CardRank;
+import org.claimapp.server.model.misc.CardSuit;
 import org.claimapp.server.service.DeckService;
 import org.springframework.stereotype.Service;
 
@@ -65,5 +67,19 @@ public class DeckServiceImpl implements DeckService {
     public Deck addCards(Deck deck, List<Card> cards) {
         deck.getCards().addAll(cards);
         return deck;
+    }
+
+    @Override
+    public String convertToString(Deck deck) {
+        Gson gsonBuilder = new GsonBuilder().create();
+
+        return gsonBuilder.toJson(deck);
+    }
+
+    @Override
+    public Deck convertFromString(String deckStr) {
+        Gson gson = new Gson();
+
+        return gson.fromJson(deckStr, Deck.class);
     }
 }

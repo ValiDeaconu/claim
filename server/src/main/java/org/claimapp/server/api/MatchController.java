@@ -1,54 +1,48 @@
 package org.claimapp.server.api;
 
-import org.claimapp.server.dto.MessageDTO;
-import org.claimapp.server.dto.RankingDTO;
-import org.claimapp.server.dto.TurnEndDTO;
-import org.claimapp.server.dto.UserScoreClaimDTO;
-import org.claimapp.server.entity.GameState;
-import org.claimapp.server.entity.User;
-import org.claimapp.server.service.GameManager;
+import org.claimapp.common.dto.MessageDTO;
+import org.claimapp.common.dto.RankingDTO;
+import org.claimapp.common.dto.TurnEndDTO;
+
+import org.claimapp.server.model.GameState;
+import org.claimapp.server.service.GameStateService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/match")
 public class MatchController {
 
-    private final GameManager gameManager;
+    private final GameStateService gameStateService;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Autowired
-    public MatchController(GameManager gameManager,
+    public MatchController(GameStateService gameStateService,
                            SimpMessagingTemplate simpMessagingTemplate) {
-        this.gameManager = gameManager;
+        this.gameStateService = gameStateService;
         this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     @PostMapping("/{lobbyId}/turn-end")
-    public void playerEndedTurn(@PathVariable("lobbyId") UUID lobbyId,
+    public void playerEndedTurn(@PathVariable("lobbyId") Long lobbyId,
                                 @RequestBody TurnEndDTO turnEndDTO) {
-        GameState gameState = gameManager.addMoveToCurrentGameState(lobbyId, turnEndDTO);
+        GameState archivedGameState = gameStateService.addMoveToCurrentGameState(lobbyId, turnEndDTO);
 
-        MessageDTO<GameState> message = new MessageDTO<>("turn-update", lobbyId, gameState);
+        MessageDTO<GameState> message = new MessageDTO<>("turn-update", lobbyId, archivedGameState);
         simpMessagingTemplate.convertAndSend("/topic/lobby", message);
     }
 
     @PostMapping("/{lobbyId}/claim")
-    public void playerCalledClaim(@PathVariable("lobbyId") UUID lobbyId) {
-        RankingDTO rankingDTO = gameManager.getRankingOfGameState(lobbyId);
+    public void playerCalledClaim(@PathVariable("lobbyId") Long lobbyId) {
+        RankingDTO rankingDTO = gameStateService.getRankingOfGameState(lobbyId);
 
         MessageDTO<RankingDTO> message = new MessageDTO<>("claim", lobbyId, rankingDTO);
         simpMessagingTemplate.convertAndSend("/topic/lobby", message);
     }
 
     @GetMapping("/{lobbyId}/gamestate")
-    public GameState getGameState(@PathVariable("lobbyId") UUID lobbyId) {
-        GameState gameState = gameManager.getGameState(lobbyId);
-        return gameState;
+    public GameState getGameState(@PathVariable("lobbyId") Long lobbyId) {
+        return gameStateService.getGameStateByLobbyId(lobbyId);
     }
 }

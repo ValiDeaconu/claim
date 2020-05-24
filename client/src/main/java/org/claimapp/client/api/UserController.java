@@ -1,34 +1,32 @@
 package org.claimapp.client.api;
 
-import org.claimapp.client.dto.IdDTO;
-import org.claimapp.client.entity.User;
 import org.claimapp.client.misc.ContextHolderConstants;
 import org.claimapp.client.service.ContextHolder;
-import org.claimapp.client.service.UserService;
+import org.claimapp.client.service.UserGateway;
+
+import org.claimapp.common.dto.IdDTO;
+
+import org.claimapp.common.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-import java.util.UUID;
 
 @Controller
 @RequestMapping("/game")
 public class UserController {
 
-    private ContextHolder contextHolder;
-    private UserService userService;
+    private final ContextHolder contextHolder;
+    private final UserGateway userGateway;
 
     @Autowired
     public UserController(ContextHolder contextHolder,
-                          UserService userService) {
+                          UserGateway userGateway) {
         this.contextHolder = contextHolder;
-        this.userService = userService;
+        this.userGateway = userGateway;
     }
 
     @GetMapping("/home")
@@ -41,7 +39,7 @@ public class UserController {
             return mav;
         }
 
-        User currentUser = userService.getUser(currentUserIdDTO);
+        UserDTO currentUser = userGateway.getUser(currentUserIdDTO);
 
         if (currentUser == null) {
             // remove cookie if no user is found with current cookie
@@ -57,7 +55,7 @@ public class UserController {
     }
 
     @GetMapping("/lobby/{lobbyId}")
-    public ModelAndView getLobbyPage(@PathVariable("lobbyId") UUID lobbyId,
+    public ModelAndView getLobbyPage(@PathVariable("lobbyId") Long lobbyId,
                                      @CookieValue(value = ContextHolderConstants.CURRENT_USER_COOKIE, defaultValue = ContextHolderConstants.CURRENT_USER_COOKIE_DEFAULT) String currentUserCookie,
                                      ModelAndView mav) {
         IdDTO currentUserIdDTO = contextHolder.getCurrentUserFromCookie(currentUserCookie);
@@ -67,7 +65,7 @@ public class UserController {
             return mav;
         }
 
-        User currentUser = userService.getUser(currentUserIdDTO);
+        UserDTO currentUser = userGateway.getUser(currentUserIdDTO);
 
         if (currentUser == null) {
             // remove cookie if no user is found with current cookie

@@ -1,40 +1,38 @@
 package org.claimapp.server.api;
 
-import org.claimapp.server.dto.MessageDTO;
-import org.claimapp.server.dto.PairDTO;
-import org.claimapp.server.dto.SingletonDTO;
-import org.claimapp.server.dto.TurnEndDTO;
-import org.claimapp.server.entity.GameState;
-import org.claimapp.server.entity.Lobby;
+import org.claimapp.common.dto.MessageDTO;
+import org.claimapp.common.dto.PairDTO;
+import org.claimapp.common.dto.SingletonDTO;
+import org.claimapp.server.model.Lobby;
 import org.claimapp.server.entity.User;
-import org.claimapp.server.service.GameManager;
+import org.claimapp.server.model.GameState;
+import org.claimapp.server.service.GameStateService;
 import org.claimapp.server.service.LobbyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/lobby")
 public class LobbyController {
 
     private final LobbyService lobbyService;
-    private final GameManager gameManager;
+    private final GameStateService gameStateService;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Autowired
     public LobbyController(LobbyService lobbyService,
-                           GameManager gameManager,
+                           GameStateService gameStateService,
                            SimpMessagingTemplate simpMessagingTemplate) {
         this.lobbyService = lobbyService;
-        this.gameManager = gameManager;
+        this.gameStateService = gameStateService;
         this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     @GetMapping("/id/{lobbyId}")
-    public Lobby getLobbyById(@PathVariable("lobbyId") UUID lobbyId) {
+    public Lobby getLobbyById(@PathVariable("lobbyId") Long lobbyId) {
         return lobbyService.getLobbyById(lobbyId);
     }
 
@@ -45,34 +43,46 @@ public class LobbyController {
 
     @PostMapping("/create")
     public Lobby createLobby(@RequestBody User host) {
-        return lobbyService.create(host);
+        Lobby lobby = lobbyService.create(host);
+
+        updateLobbyList();
+
+        return lobby;
     }
 
     @PostMapping("/flip")
-    public Lobby flipVisibility(@RequestBody UUID lobbyId) {
-        return lobbyService.flipVisibility(lobbyId);
+    public Lobby flipVisibility(@RequestBody Long lobbyId) {
+        Lobby lobby = lobbyService.flipVisibility(lobbyId);
+
+        updateLobbyList();
+
+        return lobby;
     }
 
     @PostMapping("/leave")
-    public SingletonDTO<Boolean> leaveLobby(@RequestBody PairDTO<UUID, Long> lobbyUserPair) {
+    public SingletonDTO<Boolean> leaveLobby(@RequestBody PairDTO<Long, Long> lobbyUserPair) {
         lobbyService.userLeaveLobby(lobbyUserPair.getFirst(), lobbyUserPair.getSecond());
 
         Lobby lobby = lobbyService.getLobbyById(lobbyUserPair.getFirst());
 
-        MessageDTO<Lobby> message = new MessageDTO<>("update", lobbyUserPair.getFirst(), lobby);
+        // inform lobby user leaves
+        {
+            MessageDTO<Lobby> message = new MessageDTO<>("update", lobbyUserPair.getFirst(), lobby);
+            simpMessagingTemplate.convertAndSend("/topic/lobby", message);
+        }
 
-        simpMessagingTemplate.convertAndSend("/topic/lobby", message);
+        updateLobbyList();
 
         return new SingletonDTO<>(lobby != null);
     }
 
     @PostMapping("/start")
-    public void startMatch(@RequestBody SingletonDTO<UUID> lobbyIdDTO) {
+    public void startMatch(@RequestBody SingletonDTO<Long> lobbyIdDTO) {
         Lobby updatedLobby = lobbyService.startMatch(lobbyIdDTO.getContent());
 
         if (updatedLobby != null) {
             List<User> players = updatedLobby.getPlayers();
-            GameState gameState = gameManager.create(lobbyIdDTO.getContent(), players);
+            GameState gameState = gameStateService.create(lobbyIdDTO.getContent(), players);
 
             PairDTO<Lobby, GameState> pairLobbyGameState = new PairDTO<>(updatedLobby, gameState);
 
@@ -82,5 +92,16 @@ public class LobbyController {
 
             simpMessagingTemplate.convertAndSend("/topic/lobby", message);
         }
+    }
+
+    @GetMapping("/all")
+    public List<Lobby> getAllPublicLobbies() {
+        return lobbyService.getAllPublicLobbies();
+    }
+
+    private void updateLobbyList() {
+        List<Lobby> publicLobbies = lobbyService.getAllPublicLobbies();
+        MessageDTO<List<Lobby>> message = new MessageDTO<>("update", null, publicLobbies);
+        simpMessagingTemplate.convertAndSend("/topic/lobby/list", message);
     }
 }

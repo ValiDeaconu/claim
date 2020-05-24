@@ -1,48 +1,43 @@
 package org.claimapp.server.repository.impl;
 
-import org.claimapp.server.entity.GameState;
-import org.claimapp.server.entity.Lobby;
+import org.claimapp.server.model.GameState;
 import org.claimapp.server.repository.GameStateRepository;
-import org.springframework.stereotype.Repository;
+import org.claimapp.server.repository.misc.IdGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
-@Repository
+
+@Component
 public class GameStateRepositoryImpl implements GameStateRepository {
 
-    private final Map<UUID, GameState> gameStateDb;
+    private final IdGenerator<Long> idGenerator;
 
-    public GameStateRepositoryImpl() {
-        this.gameStateDb = new HashMap<>();
+    private final Map<Long, GameState> gameStateDb;
+
+    @Autowired
+    public GameStateRepositoryImpl(IdGenerator<Long> idGenerator) {
+        this.idGenerator = idGenerator;
+
+        gameStateDb = new HashMap<>();
     }
 
     @Override
-    public Optional<GameState> find(UUID lobbyId) {
-        return this.gameStateDb.entrySet()
-                .stream()
-                .filter(e -> e.getKey().equals(lobbyId))
-                .findFirst()
-                .map(Map.Entry::getValue);
+    public GameState save(GameState gameState) {
+        if (gameState.getId() == null || !gameStateDb.containsKey(gameState.getId())) {
+            gameState.setId(idGenerator.next());
+            gameStateDb.put(gameState.getId(), gameState);
+        } else {
+            gameStateDb.replace(gameState.getId(), gameState);
+        }
+
+        return gameState;
     }
 
     @Override
-    public Optional<GameState> save(UUID lobbyId, GameState gameState) {
-        this.gameStateDb.put(lobbyId, gameState);
-        return Optional.of(gameState);
-    }
-
-    @Override
-    public Optional<GameState> update(UUID lobbyId, GameState gameState) {
-        this.gameStateDb.replace(lobbyId, gameState);
-        return Optional.of(gameState);
-    }
-
-    @Override
-    public boolean delete(UUID lobbyId) {
-        this.gameStateDb.remove(lobbyId);
-        return true;
+    public void deleteById(Long id) {
+        gameStateDb.remove(id);
     }
 }

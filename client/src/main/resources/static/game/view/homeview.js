@@ -1,4 +1,3 @@
-import BorderLayout from "/game/layout/borderlayout.js";
 import SplitLayout from "/game/layout/splitlayout.js";
 import Label, {LabelAlignment} from "/game/component/label.js";
 import MarginLayout from "/game/layout/marginlayout.js";
@@ -17,7 +16,7 @@ export default class HomeView {
     }
 
     __build_layout__() {
-        this.layout = new BorderLayout();
+        this.layout = new SplitLayout(false, 0.10, 0.90);
         this.layout.size = { width: document.body.clientWidth, height: document.body.clientHeight };
 
         this.headerPanel = new SplitLayout(true, 0.75, 0.25);
@@ -102,23 +101,8 @@ export default class HomeView {
             this.activeLobbyList = new MarginLayout({ top: 0.10, bottom: 0.10, left: 0.15, right: 0.15 });
             this.deskPanel.setComponent(1, this.activeLobbyList);
 
-            // TODO: List active public lobbies here
-            this.soonLobbyList = new Label("Soon Lobby List Here", LabelAlignment.CENTER);
-            this.soonLobbyList.fontSize = 18;
-            this.soonLobbyList.fillStyle = "white";
-            this.activeLobbyList.setComponent(0, this.soonLobbyList);
+            this.setLobbyList([]);
         }
-
-        this.footerLayout = new MarginLayout({top:0.0, left:0.0, bottom:0.0, right:0.0});
-        this.footerLayout.backgroundColor = "rgba(194, 81, 81, 0.85)";
-        this.layout.setComponent(2, this.footerLayout);
-
-        this.footerPanel = new Label(this.localeManager.locale.SERVER_STATUS + ": " + this.localeManager.locale.DISCONNECTED,
-            LabelAlignment.CENTER);
-        this.footerPanel.fillStyle = "rgb(0, 64, 64)";
-        this.footerPanel.fontSize = 12;
-        this.footerLayout.setComponent(0, this.footerPanel);
-
     }
 
     setUsernameLabelText(text) {
@@ -161,13 +145,48 @@ export default class HomeView {
         this.profilePictureHoverLabel.visible = visible;
     }
 
-    setServerStatus(status) {
-        if (status) {
-            this.footerLayout.backgroundColor = "rgba(81, 196, 146, 0.85)";
-            this.footerPanel.text = this.localeManager.locale.SERVER_STATUS + ": " + this.localeManager.locale.CONNECTED;
+    setLobbyList(lobbyList) {
+        let currentRows = Math.min(lobbyList.length, 8);
+
+        if (currentRows === 0) {
+            this.noLobbiesLabel = new Label("Could not find any public lobby", LabelAlignment.CENTER);
+            this.noLobbiesLabel.fontSize = 18;
+            this.noLobbiesLabel.fillStyle = "white";
+            this.activeLobbyList.setComponent(0, this.noLobbiesLabel);
+
+            return [];
         } else {
-            this.footerLayout.backgroundColor = "rgba(194, 81, 81, 0.85)";
-            this.footerPanel.text = this.localeManager.locale.SERVER_STATUS + ": " + this.localeManager.locale.DISCONNECTED;
+            let gridLayout = new GridLayout({rows: 9, cols: 3});
+            this.activeLobbyList.setComponent(0, gridLayout);
+
+            let hostnameLabel = new Label(this.localeManager.locale.HOSTED_BY.toUpperCase());
+            hostnameLabel.fontSize = 22;
+            gridLayout.setComponent({row: 0, col: 0}, hostnameLabel);
+
+            let availableSlotsLabel = new Label(this.localeManager.locale.AVAILABLE_SLOTS.toUpperCase());
+            availableSlotsLabel.fontSize = 22;
+            gridLayout.setComponent({row: 0, col: 1}, availableSlotsLabel);
+
+            let joinButtons = [];
+            for (let i = 0; i < currentRows; ++i) {
+                let hostname = lobbyList[i].hostname;
+                let occupiedSlots = lobbyList[i].occupiedSlots;
+                let totalSlots = lobbyList[i].totalSlots;
+
+                gridLayout.setComponent({row: i + 1, col: 0}, new Label('@' + hostname));
+
+                gridLayout.setComponent({row: i + 1, col: 1}, new Label(occupiedSlots + "/" + totalSlots));
+
+                let joinButtonMargins = new MarginLayout({top: 0, bottom: 0, left: 0.45, right: 0.15});
+                gridLayout.setComponent({row: i + 1, col: 2}, joinButtonMargins);
+
+                let joinButton = new Button("Join");
+                joinButtonMargins.setComponent(0, joinButton);
+
+                joinButtons.push(joinButton);
+            }
+
+            return joinButtons;
         }
     }
 }

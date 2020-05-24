@@ -1,7 +1,7 @@
 package org.claimapp.server.service;
 
-import org.claimapp.server.entity.Card;
-import org.claimapp.server.entity.Deck;
+import org.claimapp.server.model.Card;
+import org.claimapp.server.model.Deck;
 
 import java.util.List;
 
@@ -17,4 +17,8 @@ public interface DeckService {
     Card drawLastCard(Deck deck);
 
     Deck addCards(Deck deck, List<Card> cards);
+
+    String convertToString(Deck deck);
+
+    Deck convertFromString(String deck);
 }

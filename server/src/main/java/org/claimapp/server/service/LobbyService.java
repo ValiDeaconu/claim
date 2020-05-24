@@ -1,27 +1,29 @@
 package org.claimapp.server.service;
 
-import org.claimapp.server.entity.Lobby;
+import org.claimapp.server.model.Lobby;
 import org.claimapp.server.entity.User;
 
-import java.util.UUID;
+import java.util.List;
 
 public interface LobbyService {
 
-    Lobby getLobbyById(UUID id);
-
+    Lobby getLobbyById(Long id);
     Lobby getLobbyByAccessCode(String accessCode);
 
     Lobby create(User host);
+    Lobby save(Lobby lobby);
 
-    boolean remove(UUID id);
+    void remove(Long id);
 
-    Lobby flipVisibility(UUID lobbyId);
+    Lobby flipVisibility(Long lobbyId);
 
-    boolean userLeaveLobby(UUID lobbyId, Long userId);
+    boolean userLeaveLobby(Long lobbyId, Long userId);
 
-    Lobby userJoinLobby(UUID lobbyId, User user);
+    Lobby userJoinLobby(Long lobbyId, User user);
 
-    Lobby startMatch(UUID lobbyId);
+    Lobby startMatch(Long lobbyId);
 
-    Lobby endMatch(UUID lobbyId);
+    Lobby endMatch(Long lobbyId);
+
+    List<Lobby> getAllPublicLobbies();
 }
