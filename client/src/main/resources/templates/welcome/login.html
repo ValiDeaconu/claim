@@ -56,37 +56,35 @@
                 <div class="p-2">
                     <form action="#" method="post" class="needs-validation" th:object="${user}" novalidate>
                         <div class="form-row">
-                            <div class="text-danger" th:if="${#fields.hasAnyErrors()}">
-                                No user matches the inserted credentials.
+                            <div class="text-danger" th:if="${#fields.hasGlobalErrors()}">
+                                <div class="form-row" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></div>
                             </div>
                         </div>
 
-                        <div class="form-row">
-                            <div class="mb-lg-1">
-                                <input
-                                        type="text"
-                                        class="form-control"
-                                        name="username"
-                                        placeholder="Username"
-                                        aria-describedby="username-tag"
-                                        required
-                                />
-                            </div>
+                        <div class="form-row mb-2">
+                            <input
+                                    type="text"
+                                    class="form-control"
+                                    name="username"
+                                    placeholder="Username"
+                                    aria-describedby="username-tag"
+                                    required
+                            />
                         </div>
 
-                        <div class="form-row">
-                            <div class="mb-lg-1">
-                                <input
-                                        type="password"
-                                        class="form-control"
-                                        name="password"
-                                        placeholder="Password"
-                                        aria-describedby="password-tag"
-                                        required
-                                />
-                            </div>
+                        <div class="form-row mb-2">
+                            <input
+                                    type="password"
+                                    class="form-control"
+                                    name="password"
+                                    placeholder="Password"
+                                    aria-describedby="password-tag"
+                                    required
+                            />
                         </div>
-                        <button class="btn btn-lg btn-outline-dark btn-block text-uppercase" type="submit">Sign In</button>
+                        <div class="form-row mb-2">
+                            <button class="btn btn-lg btn-outline-dark btn-block text-uppercase" type="submit">Sign In</button>
+                        </div>
                     </form>
                 </div>
                 <div class="p-2">

@@ -10,6 +10,7 @@ import org.claimapp.common.dto.IdDTO;
 import org.claimapp.common.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -35,6 +36,7 @@ public class UserController {
 
     @GetMapping("/home")
     public ModelAndView getUserPage(@CookieValue(value = ContextHolderConstants.CURRENT_USER_COOKIE, defaultValue = ContextHolderConstants.CURRENT_USER_COOKIE_DEFAULT) String currentUserCookie,
+                                    BindingResult bindingResult,
                                     ModelAndView mav) {
         IdDTO currentUserIdDTO = contextHolder.getCurrentUserFromCookie(currentUserCookie);
 
@@ -43,7 +45,14 @@ public class UserController {
             return mav;
         }
 
-        UserDTO currentUser = userGateway.getUser(currentUserIdDTO);
+        UserDTO currentUser;
+        try {
+            currentUser = userGateway.getUser(currentUserIdDTO);
+        } catch (Exception e) {
+            bindingResult.reject("CouldNotConnectToServer");
+            mav.setViewName("/welcome/login");
+            return mav;
+        }
 
         if (currentUser == null) {
             // remove cookie if no user is found with current cookie
@@ -62,6 +71,7 @@ public class UserController {
     @GetMapping("/lobby/{lobbyId}")
     public ModelAndView getLobbyPage(@PathVariable("lobbyId") Long lobbyId,
                                      @CookieValue(value = ContextHolderConstants.CURRENT_USER_COOKIE, defaultValue = ContextHolderConstants.CURRENT_USER_COOKIE_DEFAULT) String currentUserCookie,
+                                     BindingResult bindingResult,
                                      ModelAndView mav) {
         IdDTO currentUserIdDTO = contextHolder.getCurrentUserFromCookie(currentUserCookie);
 
@@ -70,7 +80,15 @@ public class UserController {
             return mav;
         }
 
-        UserDTO currentUser = userGateway.getUser(currentUserIdDTO);
+        UserDTO currentUser;
+
+        try {
+            currentUser = userGateway.getUser(currentUserIdDTO);
+        } catch (Exception e) {
+            bindingResult.reject("CouldNotConnectToServer");
+            mav.setViewName("welcome/login");
+            return mav;
+        }
 
         if (currentUser == null) {
             // remove cookie if no user is found with current cookie

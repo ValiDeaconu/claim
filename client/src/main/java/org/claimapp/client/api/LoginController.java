@@ -61,9 +61,16 @@ public class LoginController {
                                               ModelAndView mav) {
         userValidator.validateLoginUser(loginUserDTO, bindingResult);
 
-        UserDTO userDTO = userGateway.getUser(loginUserDTO);
-        if (userDTO == null) {
-            bindingResult.reject("CredentialsNotFound");
+        UserDTO userDTO;
+        try {
+             userDTO = userGateway.getUser(loginUserDTO);
+
+            if (userDTO == null) {
+                bindingResult.reject("CredentialsNotFound");
+            }
+        } catch (Exception ignored) {
+            userDTO = null;
+            bindingResult.reject("CouldNotConnectToServer");
         }
 
         if (bindingResult.hasErrors()) {

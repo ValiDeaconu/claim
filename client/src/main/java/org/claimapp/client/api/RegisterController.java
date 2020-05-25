@@ -60,9 +60,14 @@ public class RegisterController {
                                                  ModelAndView mav) {
         userValidator.validateRegisterUser(registerUserDTO, bindingResult);
 
-        UserDTO registeredUser = userGateway.registerUser(registerUserDTO);
-        if (registeredUser == null) {
-            bindingResult.reject("username", "UsernameAlreadyTaken");
+        UserDTO registeredUser = null;
+        try {
+            registeredUser = userGateway.registerUser(registerUserDTO);
+            if (registeredUser == null) {
+                bindingResult.reject("UsernameAlreadyTaken");
+            }
+        } catch (Exception ignored) {
+            bindingResult.reject("CouldNotConnectToServer");
         }
 
         if (bindingResult.hasErrors()) {

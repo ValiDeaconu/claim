@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("server-conf")
 public class ServerConfig {
     private String url;
+    private String localUrl;
 
     public String getUrl() {
         return url;
@@ -14,5 +15,13 @@ public class ServerConfig {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getLocalUrl() {
+        return localUrl;
+    }
+
+    public void setLocalUrl(String localUrl) {
+        this.localUrl = localUrl;
     }
 }

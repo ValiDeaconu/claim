@@ -24,7 +24,7 @@ public class UserGatewayImpl implements UserGateway {
 
     @Override
     public UserDTO getUser(LoginUserDTO loginUserDTO) {
-        String url = serverConfig.getUrl() + "/login";
+        String url = serverConfig.getLocalUrl() + "/login";
 
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<Object> request = new HttpEntity<>(loginUserDTO);
@@ -34,7 +34,7 @@ public class UserGatewayImpl implements UserGateway {
 
     @Override
     public UserDTO getUser(IdDTO currentUserIdDTO) {
-        String url = serverConfig.getUrl() + "/login/" + currentUserIdDTO.getId();
+        String url = serverConfig.getLocalUrl() + "/login/" + currentUserIdDTO.getId();
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -43,7 +43,7 @@ public class UserGatewayImpl implements UserGateway {
 
     @Override
     public UserDTO registerUser(RegisterUserDTO registerUserDTO) {
-        String url = serverConfig.getUrl() + "/register";
+        String url = serverConfig.getLocalUrl() + "/register";
 
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<Object> request = new HttpEntity<>(registerUserDTO);
