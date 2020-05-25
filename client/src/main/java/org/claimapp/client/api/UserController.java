@@ -1,5 +1,6 @@
 package org.claimapp.client.api;
 
+import org.claimapp.client.config.ServerConfig;
 import org.claimapp.client.misc.ContextHolderConstants;
 import org.claimapp.client.service.ContextHolder;
 import org.claimapp.client.service.UserGateway;
@@ -20,12 +21,15 @@ import javax.servlet.http.HttpServletResponse;
 public class UserController {
 
     private final ContextHolder contextHolder;
+    private final ServerConfig serverConfig;
     private final UserGateway userGateway;
 
     @Autowired
     public UserController(ContextHolder contextHolder,
+                          ServerConfig serverConfig,
                           UserGateway userGateway) {
         this.contextHolder = contextHolder;
+        this.serverConfig = serverConfig;
         this.userGateway = userGateway;
     }
 
@@ -48,6 +52,7 @@ public class UserController {
             return mav;
         }
 
+        mav.addObject("serverAddress", serverConfig.getUrl());
         mav.addObject("currentUser", currentUser);
         mav.setViewName("/game/ui");
 
@@ -74,6 +79,7 @@ public class UserController {
             return mav;
         }
 
+        mav.addObject("serverAddress", serverConfig.getUrl());
         mav.addObject("currentLobbyId", lobbyId);
         mav.addObject("currentUser", currentUser);
         mav.setViewName("/game/ui");

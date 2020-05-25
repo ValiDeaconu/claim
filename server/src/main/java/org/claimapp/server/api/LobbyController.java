@@ -8,6 +8,7 @@ import org.claimapp.server.entity.User;
 import org.claimapp.server.model.GameState;
 import org.claimapp.server.service.GameStateService;
 import org.claimapp.server.service.LobbyService;
+import org.claimapp.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +20,19 @@ import java.util.List;
 public class LobbyController {
 
     private final LobbyService lobbyService;
+    private final UserService userService;
+
     private final GameStateService gameStateService;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Autowired
     public LobbyController(LobbyService lobbyService,
+                           UserService userService,
                            GameStateService gameStateService,
                            SimpMessagingTemplate simpMessagingTemplate) {
         this.lobbyService = lobbyService;
+        this.userService = userService;
+
         this.gameStateService = gameStateService;
         this.simpMessagingTemplate = simpMessagingTemplate;
     }
@@ -42,7 +48,9 @@ public class LobbyController {
     }
 
     @PostMapping("/create")
-    public Lobby createLobby(@RequestBody User host) {
+    public Lobby createLobby(@RequestBody SingletonDTO<Long> hostIdDTO) {
+        User host = userService.findUserById(hostIdDTO.getContent());
+
         Lobby lobby = lobbyService.create(host);
 
         updateLobbyList();
@@ -67,7 +75,7 @@ public class LobbyController {
 
         // inform lobby user leaves
         {
-            MessageDTO<Lobby> message = new MessageDTO<>("update", lobbyUserPair.getFirst(), lobby);
+            MessageDTO<Lobby> message = new MessageDTO<>("update-user-left", lobbyUserPair.getFirst(), lobby);
             simpMessagingTemplate.convertAndSend("/topic/lobby", message);
         }
 
@@ -81,10 +89,7 @@ public class LobbyController {
         Lobby updatedLobby = lobbyService.startMatch(lobbyIdDTO.getContent());
 
         if (updatedLobby != null) {
-            List<User> players = updatedLobby.getPlayers();
-            GameState gameState = gameStateService.create(lobbyIdDTO.getContent(), players);
-
-            PairDTO<Lobby, GameState> pairLobbyGameState = new PairDTO<>(updatedLobby, gameState);
+            PairDTO<Lobby, GameState> pairLobbyGameState = new PairDTO<>(updatedLobby, updatedLobby.getGameState());
 
             MessageDTO<PairDTO<Lobby, GameState>> message = new MessageDTO<>("start",
                     lobbyIdDTO.getContent(),

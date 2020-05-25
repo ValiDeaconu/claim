@@ -10,9 +10,13 @@ import java.util.List;
 public interface GameStateService {
     GameState create(Long lobbyId, List<User> users);
 
-    GameState getGameStateByLobbyId(Long lobbyId);
+    void delete(Long id);
 
-    GameState addMoveToCurrentGameState(Long lobbyId, TurnEndDTO turnEndDTO);
+    GameState getGameStateById(Long id);
 
-    RankingDTO getRankingOfGameState(Long lobbyId);
+    GameState addMoveToCurrentGameState(Long id, TurnEndDTO turnEndDTO);
+
+    GameState handleUserDisconnected(Long id, Long userId);
+
+    RankingDTO getRankingOfGameState(Long id);
 }

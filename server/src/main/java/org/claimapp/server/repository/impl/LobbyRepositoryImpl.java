@@ -6,8 +6,6 @@ import org.claimapp.server.repository.misc.IdGenerator;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 @Component
 public class LobbyRepositoryImpl implements LobbyRepository {
@@ -25,6 +23,9 @@ public class LobbyRepositoryImpl implements LobbyRepository {
 
     @Override
     public List<Lobby> findAll() {
+        if (lobbyDb.isEmpty())
+            return new ArrayList<>();
+
         return new ArrayList<>(lobbyDb.values());
     }
 

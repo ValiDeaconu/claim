@@ -32,6 +32,7 @@ export default class ViewManager {
             case Views.HOME:
                 this.view = new HomeView(this.localeManager);
                 this.controller = new HomeController(this.view, this, this.serverAddress);
+                this.controller.updateCurrentUser();
                 break;
             case Views.LOBBY:
                 this.view = new LobbyView(this.localeManager);

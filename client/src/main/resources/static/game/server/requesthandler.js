@@ -6,12 +6,12 @@ export const RequestMethod = {
 };
 
 const defaultSuccess = function (object) {
-    console.log("Request passed, returned object:");
-    console.log(object);
+    // console.log("Request passed, returned object:");
+    // console.log(object);
 }
 
 const defaultFailure = function(code, response) {
-    console.log("Request failed: Return code = " + code + ", response = " + response);
+    // console.log("Request failed: Return code = " + code + ", response = " + response);
 }
 
 export default class Request {

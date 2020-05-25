@@ -53,6 +53,11 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDTO(userOptional.get());
     }
 
+    @Override
+    public User findUserById(Long userId) {
+        return userRepository.findById(userId).orElse(null);
+    }
+
 
     @Override
     public UserDTO registerUser(RegisterUserDTO registerUserDTO) {

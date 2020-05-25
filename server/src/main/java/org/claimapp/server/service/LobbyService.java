@@ -1,5 +1,7 @@
 package org.claimapp.server.service;
 
+import org.claimapp.common.dto.RankingDTO;
+import org.claimapp.common.dto.TurnEndDTO;
 import org.claimapp.server.model.Lobby;
 import org.claimapp.server.entity.User;
 
@@ -22,7 +24,8 @@ public interface LobbyService {
     Lobby userJoinLobby(Long lobbyId, User user);
 
     Lobby startMatch(Long lobbyId);
-
+    Lobby addMoveToCurrentGameState(Long lobbyId, TurnEndDTO turnEndDTO);
+    RankingDTO getRankings(Long lobbyId);
     Lobby endMatch(Long lobbyId);
 
     List<Lobby> getAllPublicLobbies();

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 
 @Component
@@ -22,6 +23,13 @@ public class GameStateRepositoryImpl implements GameStateRepository {
         this.idGenerator = idGenerator;
 
         gameStateDb = new HashMap<>();
+    }
+
+    @Override
+    public Optional<GameState> findById(Long id) {
+        if (gameStateDb.containsKey(id))
+            return Optional.of(gameStateDb.get(id));
+        return Optional.empty();
     }
 
     @Override

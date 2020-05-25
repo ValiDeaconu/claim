@@ -30,8 +30,7 @@ window.addEventListener('load', () => {
     ResourceManager.loadAssets();
 
     // server address
-    //const serverAddress = 'http://claim.ddns.net:8091';
-    const serverAddress = 'http://localhost:8091';
+    let serverAddress = $("#server-address").val();
 
     let viewManager = new ViewManager(Locale_EN, currentUser, serverAddress);
 
@@ -84,9 +83,14 @@ window.addEventListener('resize', () => {
     }
 });
 
-window.onbeforeunload = function() {
-    console.log("Before unload");
+window.addEventListener("beforeunload", function (e) {
+    leave();
 
+    (e || window.event).returnValue = null;
+    return null;
+});
+
+function leave() {
     if (game !== null && game.viewManager !== null) {
         if (game.viewManager.currentView === Views.HOME)
             return;
@@ -94,7 +98,7 @@ window.onbeforeunload = function() {
         let controller = game.viewManager.controller;
         let lobby = controller.lobby;
 
-        let request = new Request(game.serverAddress);
+        let request = new Request(game.viewManager.serverAddress);
 
         let lobbyUserPair = {
             first: lobby.id,
@@ -105,5 +109,3 @@ window.onbeforeunload = function() {
         controller.handler.disconnect();
     }
 }
-
-

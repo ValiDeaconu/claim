@@ -1,9 +1,13 @@
 package org.claimapp.server.service.impl;
 
+import org.claimapp.common.dto.RankingDTO;
+import org.claimapp.common.dto.TurnEndDTO;
+import org.claimapp.server.model.GameState;
 import org.claimapp.server.model.Lobby;
 import org.claimapp.server.entity.User;
 import org.claimapp.server.repository.LobbyRepository;
 import org.claimapp.server.service.AccessCodeGenerator;
+import org.claimapp.server.service.GameStateService;
 import org.claimapp.server.service.LobbyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,11 +20,14 @@ public class LobbyServiceImpl implements LobbyService {
 
     private final LobbyRepository lobbyRepository;
     private final AccessCodeGenerator accessCodeGenerator;
+    private final GameStateService gameStateService;
 
     @Autowired
     public LobbyServiceImpl(LobbyRepository lobbyRepository,
+                            GameStateService gameStateService,
                             AccessCodeGenerator accessCodeGenerator) {
         this.lobbyRepository = lobbyRepository;
+        this.gameStateService = gameStateService;
         this.accessCodeGenerator = accessCodeGenerator;
     }
 
@@ -89,9 +96,19 @@ public class LobbyServiceImpl implements LobbyService {
                 userList.remove(user);
 
                 if (userList.isEmpty()) {
+                    if (lobby.getGameState() != null)
+                        gameStateService.delete(lobby.getGameState().getId());
+
                     lobbyRepository.deleteById(lobbyId);
                 } else {
                     lobby.setPlayers(userList);
+
+                    if (lobby.getGameState() != null) {
+                        GameState gameState = gameStateService
+                                .handleUserDisconnected(lobby.getGameState().getId(), userId);
+                        lobby.setGameState(gameState);
+                    }
+
                     lobbyRepository.save(lobby);
                 }
 
@@ -146,10 +163,39 @@ public class LobbyServiceImpl implements LobbyService {
             Lobby lobby = lobbyOptional.get();
             lobby.setRunning(true);
 
+            GameState gameState = gameStateService.create(lobbyId, lobby.getPlayers());
+            lobby.setGameState(gameState);
+
             return lobbyRepository.save(lobby);
         }
 
         return null;
+    }
+
+    @Override
+    public Lobby addMoveToCurrentGameState(Long lobbyId, TurnEndDTO turnEndDTO) {
+        Lobby lobby = getLobbyById(lobbyId);
+
+        if (lobby == null)
+            return null;
+
+        GameState currentGameState = lobby.getGameState();
+        GameState nextGameState = gameStateService.addMoveToCurrentGameState(currentGameState.getId(), turnEndDTO);
+
+        lobby.setGameState(nextGameState);
+
+        return lobby;
+    }
+
+    @Override
+    public RankingDTO getRankings(Long lobbyId) {
+        Lobby lobby = getLobbyById(lobbyId);
+
+        if (lobby == null)
+            return null;
+
+        GameState gameState = lobby.getGameState();
+        return gameStateService.getRankingOfGameState(gameState.getId());
     }
 
     @Override

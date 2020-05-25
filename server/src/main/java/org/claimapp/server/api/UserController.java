@@ -21,21 +21,23 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    @RequestMapping("{userId}/update/profile")
+    @GetMapping("/get/{userId}")
+    public UserDTO get(@PathVariable("userId") Long userId) {
+        return userService.getUser(userId);
+    }
+
+    @PostMapping("{userId}/update/profile")
     public UserDTO save(@PathVariable("userId") Long userId,
                         @RequestBody SingletonDTO<Integer> profileAssetIndexDTO) {
         return userService.updateProfile(userId, profileAssetIndexDTO);
     }
 
-    @PostMapping
-    @RequestMapping("/mass/update/increase/loss")
+    @PostMapping("/mass/update/increase/loss")
     public void increaseLoss(@RequestBody SingletonDTO<List<Long>> userIdsDTO) {
         userService.increaseLoss(userIdsDTO.getContent());
     }
 
-    @PostMapping
-    @RequestMapping("/mass/update/increase/wins")
+    @PostMapping("/mass/update/increase/wins")
     public void increaseWins(@RequestBody SingletonDTO<List<Long>> userIdsDTO) {
         userService.increaseWins(userIdsDTO.getContent());
     }

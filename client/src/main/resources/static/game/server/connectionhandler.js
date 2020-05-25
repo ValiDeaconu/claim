@@ -4,6 +4,7 @@ export default class ConnectionHandler {
         this.socket = new SockJS(address);
 
         this.stompClient = Stomp.over(this.socket);
+        this.stompClient.debug = null;
 
         this.connected = false;
 

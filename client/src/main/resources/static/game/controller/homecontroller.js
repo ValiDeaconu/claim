@@ -15,6 +15,20 @@ export default class HomeController {
         this.update();
     }
 
+    updateCurrentUser() {
+        let request = new Request(this.serverAddress, (currentUser) => {
+            this.viewManager.currentUser = {
+                id: currentUser.id,
+                username: currentUser.username,
+                wins: currentUser.wins,
+                loss: currentUser.loss,
+                profileAssetIndex: currentUser.profileAssetIndex
+            };
+        });
+
+        request.send(RequestMethod.GET, "/user/get/" + this.viewManager.currentUser.id);
+    }
+
     update() {
         this.ui.setUsernameLabelText(this.viewManager.currentUser.username);
         this.ui.setWinsLabelText(this.viewManager.currentUser.wins + " wins");
@@ -28,12 +42,8 @@ export default class HomeController {
                 this.viewManager.updateUrl();
             });
 
-            let sendUser = {
-                id: this.viewManager.currentUser.id,
-                username: this.viewManager.currentUser.username,
-                profileAssetIndex : this.viewManager.currentUser.profileAssetIndex
-            };
-            createLobbyRequest.send(RequestMethod.POST, "/lobby/create", JSON.stringify(sendUser));
+            let hostIdDTO = { content: this.viewManager.currentUser.id };
+            createLobbyRequest.send(RequestMethod.POST, "/lobby/create", JSON.stringify(hostIdDTO));
         });
 
         this.ui.addLogoutButtonConsumer(() => {
@@ -46,24 +56,6 @@ export default class HomeController {
             let checkLobbyExistsRequest = new Request(this.serverAddress, (lobby) => {
                 if (lobby) {
                     this.__broadcastJoinLobby__(lobby.id);
-                    /*let handler = new ConnectionHandler(this.serverAddress + "/game");
-                    handler.connect("/topic/lobby", () => {
-                        let lobbyJoinPair = { first: lobby.id, second: this.viewManager.currentUser };
-                        handler.send("/app/lobby/join", JSON.stringify(lobbyJoinPair));
-                    });
-
-                    handler.addOnReceiveCallback((jsonObject) => {
-                        let command = jsonObject.command;
-                        let lobbyId = jsonObject.lobbyId;
-
-                        if (command === 'update') {
-                            let lobbyController = this.viewManager.setViewTo(Views.LOBBY);
-                            lobbyController.lobby = jsonObject.arg;
-                            lobbyController.update();
-                            handler.disconnect();
-                            this.viewManager.updateUrl();
-                        }
-                    });*/
                 } else {
                     alert("Requested lobby does not exists");
                 }
@@ -126,7 +118,7 @@ export default class HomeController {
         socketHandler.connect("/topic/lobby", () => {
             socketHandler.send("/app/lobby/join", JSON.stringify({
                 first: lobbyId,
-                second: this.viewManager.currentUser
+                second: this.viewManager.currentUser.id
             }));
         });
 

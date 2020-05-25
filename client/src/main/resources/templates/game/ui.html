@@ -25,15 +25,7 @@
                 overflow: hidden;
             }
 
-            .current-user {
-                display: none;
-            }
-
-            .current-lobby {
-                display: none;
-            }
-
-            .game-assets {
+            .server-address, .current-user, .current-lobby, .game-assets {
                 display: none;
             }
         </style>
@@ -41,6 +33,11 @@
     <body>
 
         <canvas id="gameScreen" style="border: 1px solid #000;"></canvas>
+
+        <!-- Server Address -->
+        <div class="server-address">
+            <input type="hidden" th:value="${serverAddress}" id="server-address" disabled />
+        </div>
 
         <!-- Connected User -->
         <div class="current-user">

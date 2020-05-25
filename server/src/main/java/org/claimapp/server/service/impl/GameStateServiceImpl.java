@@ -26,7 +26,6 @@ public class GameStateServiceImpl implements GameStateService {
     private final HandService handService;
 
     private final UserService userService;
-    private final LobbyService lobbyService;
 
     private final UserMapper userMapper;
     private final CardMapper cardMapper;
@@ -35,7 +34,6 @@ public class GameStateServiceImpl implements GameStateService {
     public GameStateServiceImpl(DeckService deckService,
                                 HandService handService,
                                 UserService userService,
-                                LobbyService lobbyService,
                                 UserMapper userMapper,
                                 CardMapper cardMapper,
                                 GameStateRepository gameStateRepository) {
@@ -43,7 +41,6 @@ public class GameStateServiceImpl implements GameStateService {
         this.handService = handService;
 
         this.userService = userService;
-        this.lobbyService = lobbyService;
 
         this.userMapper = userMapper;
         this.cardMapper = cardMapper;
@@ -52,11 +49,7 @@ public class GameStateServiceImpl implements GameStateService {
     }
 
     @Override
-    public GameState create(Long lobbyId, List<User> users) {
-        Lobby lobbyById = lobbyService.getLobbyById(lobbyId);
-        if (lobbyById == null)
-            return null;
-
+    public GameState create(Long id, List<User> users) {
         // create a new deck and shuffle it
         Deck gameDeck = deckService.getShuffledFreshDeck();
 
@@ -98,28 +91,25 @@ public class GameStateServiceImpl implements GameStateService {
 
         gameStateRepository.save(gameState);
 
-        lobbyById.setGameState(gameState);
-        lobbyService.save(lobbyById);
-
         return gameState;
     }
 
     @Override
-    public GameState getGameStateByLobbyId(Long lobbyId) {
-        Lobby lobbyById = lobbyService.getLobbyById(lobbyId);
-
-        if (lobbyById == null)
-            return null;
-
-        return lobbyById.getGameState();
+    public void delete(Long id) {
+        gameStateRepository.deleteById(id);
     }
 
     @Override
-    public GameState addMoveToCurrentGameState(Long lobbyId, TurnEndDTO turnEndDTO) {
+    public GameState getGameStateById(Long id) {
+        return gameStateRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public GameState addMoveToCurrentGameState(Long id, TurnEndDTO turnEndDTO) {
         if (!turnEndDTO.getDrawMethod().equals("deck") && !turnEndDTO.getDrawMethod().equals("drop"))
             return null;
 
-        GameState gameState = getGameStateByLobbyId(lobbyId);
+        GameState gameState = getGameStateById(id);
 
         if (gameState != null) {
             // get current player by turn index
@@ -186,13 +176,62 @@ public class GameStateServiceImpl implements GameStateService {
     }
 
     @Override
-    public RankingDTO getRankingOfGameState(Long lobbyId) {
-        GameState gameState = getGameStateByLobbyId(lobbyId);
+    public GameState handleUserDisconnected(Long id, Long userId) {
+        GameState gameState = getGameStateById(id);
 
         if (gameState != null) {
-            // set lobby as not running anymore
-            lobbyService.endMatch(lobbyId);
+            List<Hand> userHands = gameState.getUserHands();
 
+            if (userHands.size() == 1) {
+                // last user left, destroy gameState
+                gameStateRepository.deleteById(gameState.getId());
+
+                return null;
+            } else {
+                Optional<Hand> leftUserHandOptional = userHands.stream()
+                        .filter(h -> h.getUser().getId().equals(userId))
+                        .findFirst();
+
+                // user who left is not from this game or is already deleted
+                if (leftUserHandOptional.isEmpty())
+                    return gameState;
+
+                Hand leftUserHand = leftUserHandOptional.get();
+
+                // if it was his turn, pass the turn
+                int handIndex = userHands.indexOf(leftUserHand);
+                if (handIndex == gameState.getTurn()) {
+                    gameState.setTurn((handIndex + 1) % (userHands.size() - 1));
+                }
+
+                // remove user hand from list of hands
+                userHands.remove(leftUserHand);
+                gameState.setUserHands(userHands);
+
+                // put all left user's cards into thrown deck
+                // keep track of the last card
+                Deck thrownDeck = gameState.getThrownDeck();
+                Card lastCardThrownDeck = deckService.drawLastCard(thrownDeck);
+                thrownDeck.getCards().addAll(leftUserHand.getCards());
+                thrownDeck.getCards().add(lastCardThrownDeck);
+                gameState.setThrownDeck(thrownDeck);
+
+                // increase leaver loses with 1
+                userService.increaseLoss(leftUserHand.getUser().getId());
+
+                // save gameState
+                return gameStateRepository.save(gameState);
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public RankingDTO getRankingOfGameState(Long id) {
+        GameState gameState = getGameStateById(id);
+
+        if (gameState != null) {
             List<Hand> userHands = gameState.getUserHands();
 
             List<Integer> userScores = new ArrayList<>();
@@ -292,10 +331,6 @@ public class GameStateServiceImpl implements GameStateService {
 
                 losers.add(userScoreClaimDTO);
             }
-
-            Lobby lobbyById = lobbyService.getLobbyById(lobbyId);
-            lobbyById.setGameState(null);
-            lobbyService.save(lobbyById);
 
             gameStateRepository.deleteById(gameState.getId());
 

@@ -107,11 +107,15 @@ export default class ArenaController {
                         this.gameState = jsonObject.arg;
                         this.droppedCards = [];
                         this.update();
-                    }
-                    else if (command === "claim") {
-                        this.lobby.running = false;
-
-                        let rankings = jsonObject.arg;
+                    } else if (command === 'update-user-left') {
+                        this.lobby = jsonObject.arg;
+                        this.gameState = this.lobby.gameState;
+                        this.droppedCards = [];
+                        this.update();
+                        this.ui.setMessage("A player left the game", 3000);
+                    } else if (command === "claim") {
+                        this.lobby = jsonObject.arg.first;
+                        let rankings = jsonObject.arg.second;
 
                         let winners = rankings.winners;
                         let losers = rankings.losers;
@@ -273,6 +277,8 @@ export default class ArenaController {
                 this.ui.setMessage("You cannot leave from an on-going match");
                 return;
             }
+
+            this.handler.disconnect();
 
             let controller = this.viewManager.setViewTo(Views.LOBBY);
             controller.lobby = this.lobby;
